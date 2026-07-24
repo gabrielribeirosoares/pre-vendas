@@ -60,13 +60,35 @@ export const SettingsBackupView = ({
     setSecondaryColor(preset.secondary);
   };
 
-  // Image Upload Handlers (converts local files to Base64 data URLs)
+  // Image Upload Handler (resizes & compresses to lightweight data URL)
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setLogoUrl(event.target.result);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 200; // 200px max dimension for fast icon
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedDataUrl = canvas.toDataURL('image/png', 0.85);
+          setLogoUrl(compressedDataUrl);
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -201,39 +223,6 @@ export const SettingsBackupView = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* FAVICON DO PROJETO */}
-          <div className="form-group" style={{ marginTop: '8px' }}>
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Globe size={16} /> Favicon (Ícone da Aba do Navegador)
-            </label>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                value={faviconUrl}
-                onChange={(e) => setFaviconUrl(e.target.value)}
-                className="input-field"
-                placeholder="https://exemplo.com/favicon.ico"
-                style={{ flex: 1, minWidth: '220px' }}
-              />
-              <label className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '8px 14px', cursor: 'pointer' }}>
-                <Upload size={14} /> Carregar Favicon
-                <input type="file" accept="image/*" onChange={handleFaviconUpload} style={{ display: 'none' }} />
-              </label>
-              {faviconUrl && (
-                <button
-                  type="button"
-                  onClick={() => setFaviconUrl('')}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer' }}
-                >
-                  Remover Favicon
-                </button>
-              )}
-            </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Recomendado imagem quadrada (PNG ou ICO de 32x32 ou 64x64).
-            </span>
           </div>
         </div>
 

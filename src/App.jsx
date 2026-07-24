@@ -117,13 +117,21 @@ export default function App() {
     if (user?.id && isSupabaseConfigured) {
       fetchSupabaseData(user.id).then((remote) => {
         if (remote) {
-          setItems(remote.items || []);
-          setCustomers(remote.customers || []);
-          setReservations(remote.reservations || []);
-          setSettings((prev) => ({
-            ...prev,
-            ...(remote.settings || {}),
-          }));
+          if (remote.items && remote.items.length > 0) setItems(remote.items);
+          if (remote.customers && remote.customers.length > 0) setCustomers(remote.customers);
+          if (remote.reservations && remote.reservations.length > 0) setReservations(remote.reservations);
+          
+          if (remote.settings && Object.keys(remote.settings).length > 0) {
+            setSettings((prev) => {
+              const merged = { ...prev };
+              Object.keys(remote.settings).forEach((key) => {
+                if (remote.settings[key]) {
+                  merged[key] = remote.settings[key];
+                }
+              });
+              return merged;
+            });
+          }
         }
       });
     }
