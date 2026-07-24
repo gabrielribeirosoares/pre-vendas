@@ -93,6 +93,25 @@ export default function App() {
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
   const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
 
+  // Derive Store Slug for Multi-Store URL Routing
+  const storeSlug = (settings?.storeName || 'minha-loja')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // Keep Browser URL updated with store slug (Multi-store URL)
+  useEffect(() => {
+    if (user && storeSlug) {
+      const currentPath = window.location.pathname;
+      const targetPath = `/loja/${storeSlug}`;
+      if (!currentPath.startsWith(`/loja/`)) {
+        window.history.replaceState(null, '', targetPath);
+      }
+    }
+  }, [user, storeSlug]);
+
   // Load Remote Supabase Data on Auth Login (New accounts start empty)
   useEffect(() => {
     if (user?.id && isSupabaseConfigured) {

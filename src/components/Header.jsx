@@ -20,8 +20,8 @@ export const Header = ({
   const isLight = settings?.themeMode === 'light';
 
   const handleCopyStoreLink = () => {
-    // Copy current site URL
-    const storeUrl = window.location.origin;
+    // Copy full store URL with store path
+    const storeUrl = window.location.href;
     navigator.clipboard.writeText(storeUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
