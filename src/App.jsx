@@ -144,14 +144,15 @@ export default function App() {
     if (settings?.storeName) {
       document.title = `${settings.storeName} - Pré-Vendas`;
     }
-    if (settings?.faviconUrl) {
+    const activeFavicon = settings?.faviconUrl || settings?.logoUrl;
+    if (activeFavicon) {
       let link = document.querySelector("link[rel*='icon']");
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = settings.faviconUrl;
+      link.href = activeFavicon;
     }
   }, [settings]);
 
