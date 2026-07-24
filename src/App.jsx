@@ -29,6 +29,7 @@ import {
   isSupabaseConfigured,
   signOutUser,
   fetchSupabaseData,
+  fetchPublicStoreBySlug,
   saveSupabaseSettings,
   saveSupabaseItem,
   deleteSupabaseItem,
@@ -92,6 +93,21 @@ export default function App() {
   const [customers, setCustomers] = useState(() => loadState(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
   const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
+
+  // Check if URL has a store slug (e.g., /loja/gabriel-minis) when visiting unauthenticated
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/loja/')) {
+      const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+      if (slug) {
+        fetchPublicStoreBySlug(slug).then((publicSettings) => {
+          if (publicSettings) {
+            setSettings((prev) => ({ ...prev, ...publicSettings }));
+          }
+        });
+      }
+    }
+  }, []);
 
   // Derive Store Slug for Multi-Store URL Routing
   const storeSlug = (settings?.storeName || 'minha-loja')

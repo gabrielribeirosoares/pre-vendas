@@ -158,6 +158,41 @@ export const fetchSupabaseData = async (userId) => {
   }
 };
 
+export const fetchPublicStoreBySlug = async (slug) => {
+  if (!isSupabaseConfigured || !supabase || !slug) return null;
+
+  try {
+    const { data: allSettings } = await supabase.from('store_settings').select('*');
+    if (!allSettings || allSettings.length === 0) return null;
+
+    const matched = allSettings.find((s) => {
+      if (!s.store_name) return false;
+      const sSlug = s.store_name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      return sSlug === slug;
+    });
+
+    if (matched) {
+      return {
+        storeName: matched.store_name,
+        pixKey: matched.pix_key,
+        primaryColor: matched.primary_color || '#38bdf8',
+        secondaryColor: matched.secondary_color || '#a855f7',
+        themeMode: matched.theme_mode || 'dark',
+        logoUrl: matched.logo_url || '',
+        faviconUrl: matched.favicon_url || '',
+      };
+    }
+  } catch (err) {
+    console.error('Erro ao buscar loja pública por slug:', err);
+  }
+  return null;
+};
+
 export const saveSupabaseItem = async (item, userId) => {
   if (!isSupabaseConfigured || !supabase || !userId) return item;
   const payload = {
