@@ -228,75 +228,59 @@ export const CustomerPortalView = ({
       background: 'radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), var(--bg-main)',
       color: 'var(--text-primary)',
     }}>
-      {/* Header */}
-      <header style={{
-        background: 'var(--header-bg)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--border-color)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <div style={{
-          maxWidth: '960px',
-          margin: '0 auto',
-          padding: '14px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '14px',
-          flexWrap: 'wrap',
+      {session && (
+        <header style={{
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--border-color)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {settings?.logoUrl ? (
-              <img src={settings.logoUrl} alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover', border: '1px solid var(--border-color)' }} />
-            ) : (
-              <div style={{
-                width: '40px', height: '40px', borderRadius: '10px',
-                background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 16px rgba(56, 189, 248, 0.3)',
-              }}>
-                <Flame size={22} color="#fff" />
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {settings?.storeName || 'Miniatures Club'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <UserCheck size={12} /> ÁREA DO COLECIONADOR
+          <div style={{
+            maxWidth: '960px',
+            margin: '0 auto',
+            padding: '14px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '14px',
+            flexWrap: 'wrap',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {settings?.logoUrl ? (
+                <img src={settings.logoUrl} alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover', border: '1px solid var(--border-color)' }} />
+              ) : (
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(56, 189, 248, 0.3)',
+                }}>
+                  <Flame size={22} color="#fff" />
+                </div>
+              )}
+              <div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  {settings?.storeName || 'Miniatures Club'}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <UserCheck size={12} /> ÁREA DO COLECIONADOR
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {session && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }} className="hide-on-xs">
-                  {session.name}
-                </span>
-                <button
-                  onClick={() => {
-                    const selectStore = prompt('Digite o slug da loja que deseja acessar (ex: gabriel-minis, teste2):');
-                    if (selectStore) {
-                      window.location.href = `/loja/${selectStore.trim().toLowerCase()}`;
-                    }
-                  }}
-                  className="btn btn-secondary"
-                  style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', borderColor: 'rgba(56, 189, 248, 0.3)', color: 'var(--accent-cyan)' }}
-                  title="Trocar de Loja"
-                >
-                  <Store size={14} /> Trocar Loja
-                </button>
-                <button onClick={handleLogout} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-red)' }}>
-                  <LogOut size={14} /> Sair
-                </button>
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }} className="hide-on-xs">
+                {session.name}
+              </span>
+              <button onClick={handleLogout} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-red)' }}>
+                <LogOut size={14} /> Sair
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '28px 20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -311,21 +295,43 @@ export const CustomerPortalView = ({
               flexDirection: 'column',
               gap: '20px',
             }}>
-              {/* Icon */}
-              <div style={{
-                width: '60px', height: '60px', borderRadius: '16px',
-                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto', border: '1px solid var(--border-glow)',
-              }}>
-                {authMode === 'login' ? <Lock size={28} color="var(--accent-cyan)" /> : <User size={28} color="var(--accent-purple)" />}
+              {/* Store Logo & Header Icon */}
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                {settings?.logoUrl ? (
+                  <img
+                    src={settings.logoUrl}
+                    alt={settings.storeName}
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      objectFit: 'cover',
+                      border: '1px solid var(--border-glow)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '60px', height: '60px', borderRadius: '16px',
+                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto', border: '1px solid var(--border-glow)',
+                  }}>
+                    <Flame size={28} color="var(--accent-cyan)" />
+                  </div>
+                )}
+                <div>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    {settings?.storeName ? settings.storeName.toUpperCase() : 'MINIATURES PRE-ORDERS CLUB'}
+                  </h2>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 600, marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <UserCheck size={13} /> ÁREA DO COLECIONADOR
+                  </div>
+                </div>
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  {authMode === 'login' ? 'Entrar na Minha Conta' : 'Criar Conta de Colecionador'}
-                </h2>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                   {authMode === 'login'
                     ? 'Acesse com seu e-mail e senha para acompanhar suas reservas e rastreios.'
                     : 'Cadastre-se usando o mesmo telefone que usa na loja para vincular seus pedidos.'
