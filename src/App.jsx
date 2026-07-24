@@ -103,7 +103,6 @@ export default function App() {
           setReservations(remote.reservations || []);
           setSettings((prev) => ({
             ...prev,
-            storeName: user?.user_metadata?.store_name || prev.storeName,
             ...(remote.settings || {}),
           }));
         }
