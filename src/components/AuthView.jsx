@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Flame, Lock, Mail, User, Store, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInUser, signUpUser, resetUserPassword, isSupabaseConfigured } from '../services/supabase';
 
-export const AuthView = ({ onAuthSuccess }) => {
+export const AuthView = ({ onAuthSuccess, settings }) => {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -14,7 +14,6 @@ export const AuthView = ({ onAuthSuccess }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [storeName, setStoreName] = useState('');
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +53,7 @@ export const AuthView = ({ onAuthSuccess }) => {
     setLoading(true);
 
     try {
-      const { data, error } = await signUpUser({ email, password, fullName, storeName });
+      const { data, error } = await signUpUser({ email, password, fullName });
       if (error) {
         setErrorMessage(error.message || 'Erro ao criar conta.');
       } else {
@@ -90,13 +89,6 @@ export const AuthView = ({ onAuthSuccess }) => {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    const { data } = await signInUser({ email: 'demo@diecastprevendas.com.br', password: 'demo' });
-    onAuthSuccess(data.user);
-    setLoading(false);
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -117,28 +109,42 @@ export const AuthView = ({ onAuthSuccess }) => {
       }}>
         {/* Logo & Brand Header */}
         <div style={{ textTransform: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{
-            width: '54px',
-            height: '54px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-purple))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)',
-            marginBottom: '12px',
-          }}>
-            <Flame size={32} color="#ffffff" />
-          </div>
+          {settings?.logoUrl ? (
+            <img
+              src={settings.logoUrl}
+              alt="Logo da Loja"
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '16px',
+                objectFit: 'cover',
+                border: '1px solid var(--border-color)',
+                marginBottom: '12px',
+                boxShadow: '0 6px 20px rgba(56, 189, 248, 0.3)',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '54px',
+              height: '54px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-purple))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)',
+              marginBottom: '12px',
+            }}>
+              <Flame size={32} color="#ffffff" />
+            </div>
+          )}
 
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>
-            DIECAST <span style={{ color: 'var(--accent-orange)' }}>PRE-ORDER</span>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.15 }}>
+            {settings?.storeName ? settings.storeName.toUpperCase() : 'DIECAST PRE-ORDER'}
           </h1>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Sistema de Gestão de Pré-Vendas de Miniaturas (Mini GT, Kaido House, Pop Race)
+            Sistema de Gestão de Pré-Vendas de Miniaturas
           </p>
-
-
         </div>
 
         {/* Mode Switch Tabs */}
@@ -408,18 +414,6 @@ export const AuthView = ({ onAuthSuccess }) => {
           </form>
         )}
 
-        {/* Quick Demo Access Button */}
-        <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            className="btn btn-secondary"
-            style={{ width: '100%', fontSize: '0.8125rem' }}
-          >
-            <ShieldCheck size={16} color="var(--accent-orange)" />
-            Entrar no Modo Demonstração Rápida
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -365,7 +365,7 @@ export default function App() {
 
   // Render Auth Screen if not logged in
   if (!user) {
-    return <AuthView onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
+    return <AuthView settings={settings} onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
   }
 
   // Render Public Storefront View if active
