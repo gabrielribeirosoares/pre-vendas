@@ -16,6 +16,7 @@ export const Sidebar = ({
   counts,
   isMobileOpen,
   setIsMobileOpen,
+  settings,
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -62,31 +63,55 @@ export const Sidebar = ({
       >
         {/* Brand Header */}
         <div style={{
-          padding: '20px',
+          padding: '20px 16px',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-purple))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(249, 115, 22, 0.4)',
-            }}>
-              <Flame size={22} color="#ffffff" />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>
-                DIECAST <span style={{ color: 'var(--accent-orange)' }}>PRE-ORDER</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            {settings?.logoUrl ? (
+              <img
+                src={settings.logoUrl}
+                alt="Logo da Loja"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                  border: '1px solid var(--border-color)',
+                }}
+              />
+            ) : (
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: '0 4px 16px rgba(56, 189, 248, 0.3)',
+              }}>
+                <Flame size={22} color="#ffffff" />
+              </div>
+            )}
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <h1 style={{
+                fontSize: '0.95rem',
+                fontWeight: 800,
+                color: '#ffffff',
+                lineHeight: 1.15,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}>
+                {settings?.storeName || 'DIECAST PRE-ORDER'}
               </h1>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>
-                MINI GT • KAIDO • POP RACE
+              <span style={{ fontSize: '0.68rem', color: 'var(--accent-cyan)', fontWeight: 600, letterSpacing: '0.05em' }}>
+                GESTOR DE PRÉ-VENDAS
               </span>
             </div>
           </div>
@@ -152,21 +177,7 @@ export const Sidebar = ({
           })}
         </nav>
 
-        {/* Footer Info */}
-        <div style={{
-          padding: '14px',
-          margin: '12px',
-          borderRadius: 'var(--radius-sm)',
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid var(--border-color)',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-        }}>
-          <div style={{ color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '2px' }}>
-            Sistema Mobile-First
-          </div>
-          Controle completo de reservas e lotes em qualquer dispositivo.
-        </div>
+
       </aside>
     </>
   );

@@ -43,7 +43,7 @@ export const ReservationsView = ({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
             Reservas de Clientes
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '4px' }}>
@@ -110,7 +110,7 @@ export const ReservationsView = ({
                   <tr key={res.id}>
                     {/* Customer */}
                     <td>
-                      <div style={{ fontWeight: 700, color: '#ffffff' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                         {customer ? customer.name : 'Cliente Removido'}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -130,7 +130,7 @@ export const ReservationsView = ({
                           />
                         )}
                         <div>
-                          <div style={{ fontWeight: 600, color: '#ffffff' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                             {item ? item.name : 'Modelo Indefinido'}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
@@ -144,7 +144,7 @@ export const ReservationsView = ({
                     <td style={{ fontWeight: 700 }}>{res.quantity} un</td>
 
                     {/* Total Price */}
-                    <td style={{ fontWeight: 700, color: '#ffffff' }}>
+                    <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                       {formatBRL(res.totalPrice)}
                     </td>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Lock, Mail, User, Store, Eye, EyeOff, ArrowRight, ShieldCheck, Database } from 'lucide-react';
+import { Flame, Lock, Mail, User, Store, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInUser, signUpUser, resetUserPassword, isSupabaseConfigured } from '../services/supabase';
 
 export const AuthView = ({ onAuthSuccess }) => {
@@ -138,23 +138,7 @@ export const AuthView = ({ onAuthSuccess }) => {
             Sistema de Gestão de Pré-Vendas de Miniaturas (Mini GT, Kaido House, Pop Race)
           </p>
 
-          {/* Database Connection Status Badge */}
-          <div style={{
-            marginTop: '12px',
-            padding: '4px 12px',
-            borderRadius: '999px',
-            fontSize: '0.72rem',
-            fontWeight: 600,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: isSupabaseConfigured ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-            color: isSupabaseConfigured ? 'var(--accent-green)' : 'var(--accent-cyan)',
-            border: `1px solid ${isSupabaseConfigured ? 'var(--accent-green)' : 'var(--accent-cyan)'}30`,
-          }}>
-            <Database size={12} />
-            {isSupabaseConfigured ? 'Conectado ao Banco Supabase' : 'Modo Demonstração / LocalStorage'}
-          </div>
+
         </div>
 
         {/* Mode Switch Tabs */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Search, Car, UserPlus, Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon } from 'lucide-react';
 
 export const Header = ({
   onNewItem,
@@ -10,14 +10,17 @@ export const Header = ({
   onToggleMobileMenu,
   user,
   onLogout,
+  settings,
+  onToggleTheme,
 }) => {
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
-  const storeDisplayName = user?.user_metadata?.store_name || 'Minha Loja';
+  const storeDisplayName = settings?.storeName || user?.user_metadata?.store_name || 'Minha Loja';
+  const isLight = settings?.themeMode === 'light';
 
   return (
     <header style={{
       minHeight: '64px',
-      background: 'rgba(13, 19, 34, 0.9)',
+      background: 'var(--header-bg)',
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border-color)',
       padding: '10px 16px',
@@ -77,6 +80,18 @@ export const Header = ({
           <span>Nova Reserva</span>
         </button>
 
+        {/* Theme Toggle Button (Light/Dark) */}
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="btn btn-icon"
+          title={isLight ? 'Alternar para Modo Escuro' : 'Alternar para Modo Claro'}
+          aria-label="Alternar Tema"
+          style={{ color: 'var(--accent-cyan)' }}
+        >
+          {isLight ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+
         {/* User Account Dropdown & Logout */}
         <div style={{
           display: 'flex',
@@ -86,10 +101,10 @@ export const Header = ({
           borderLeft: '1px solid var(--border-color)',
         }}>
           <div style={{ textAlign: 'right' }} className="hide-on-xs">
-            <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>
               {userDisplayName}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
               {storeDisplayName}
             </div>
           </div>
@@ -98,7 +113,7 @@ export const Header = ({
             onClick={onLogout}
             className="btn btn-icon"
             title="Sair da Conta"
-            style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+            style={{ color: 'var(--accent-red)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
           >
             <LogOut size={16} />
           </button>

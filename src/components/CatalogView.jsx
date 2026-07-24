@@ -33,7 +33,7 @@ export const CatalogView = ({
       {/* Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
             Catálogo de Pré-Vendas
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '4px' }}>
@@ -160,7 +160,7 @@ export const CatalogView = ({
                       SKU: <span style={{ color: 'var(--accent-cyan)' }}>{item.sku}</span> • Escala {item.scale || '1:64'}
                     </div>
 
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginTop: '4px', lineHeight: 1.3 }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.3 }}>
                       {item.name}
                     </h3>
 
@@ -183,7 +183,7 @@ export const CatalogView = ({
                   }}>
                     <div>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>PREÇO FINAL</span>
-                      <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#ffffff' }}>
+                      <span style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {formatBRL(item.retailPrice)}
                       </span>
                     </div>
@@ -198,7 +198,7 @@ export const CatalogView = ({
                     <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Calendar size={14} color="var(--accent-orange)" />
-                        Chegada: <strong style={{ color: '#ffffff' }}>{item.releaseQuarter || 'Em breve'}</strong>
+                        Chegada: <strong style={{ color: 'var(--text-primary)' }}>{item.releaseQuarter || 'Em breve'}</strong>
                       </span>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-green)' }}>
                         {totalReservedUnits} reservadas

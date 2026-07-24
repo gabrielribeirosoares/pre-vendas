@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
     store_name TEXT DEFAULT 'Miniatures Pre-Orders Club',
     pix_key TEXT DEFAULT 'pix@miniaturasprevendas.com.br',
+    primary_color TEXT DEFAULT '#38bdf8',
+    secondary_color TEXT DEFAULT '#a855f7',
+    theme_mode TEXT DEFAULT 'dark',
+    logo_url TEXT,
+    favicon_url TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

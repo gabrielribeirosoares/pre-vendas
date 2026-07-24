@@ -48,7 +48,7 @@ export const ModalWhatsApp = ({
             <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>
               <MessageCircle size={20} />
             </div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Notificação WhatsApp • {customer.name}
             </h3>
           </div>

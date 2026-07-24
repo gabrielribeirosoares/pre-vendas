@@ -22,7 +22,7 @@ export const CustomersView = ({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
             Base de Colecionadores (Clientes)
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '4px' }}>
@@ -57,7 +57,7 @@ export const CustomersView = ({
               <div key={cust.id} className="glass-card glass-card-interactive" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {cust.name}
                     </h3>
                     <span className="badge" style={{ color: 'var(--accent-purple)', backgroundColor: 'rgba(168, 85, 247, 0.15)' }}>
@@ -100,7 +100,7 @@ export const CustomersView = ({
                 }}>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>TOTAL EM RESERVAS</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {formatBRL(totalSpent)}
                     </span>
                   </div>

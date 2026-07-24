@@ -70,7 +70,7 @@ export const ModalItemForm = ({ isOpen, onClose, onSave, itemToEdit }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             {itemToEdit ? 'Editar Modelo Miniatura' : 'Cadastrar Novo Modelo em Pré-Venda'}
           </h3>
           <button onClick={onClose} className="btn btn-icon">

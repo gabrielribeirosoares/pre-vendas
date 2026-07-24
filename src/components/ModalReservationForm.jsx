@@ -102,7 +102,7 @@ export const ModalReservationForm = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             {reservationToEdit ? 'Editar Reserva de Cliente' : 'Nova Reserva de Pré-Venda'}
           </h3>
           <button onClick={onClose} className="btn btn-icon">
