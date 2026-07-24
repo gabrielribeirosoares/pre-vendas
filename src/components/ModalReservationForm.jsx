@@ -199,6 +199,18 @@ export const ModalReservationForm = ({
               />
             </div>
 
+            {/* Código de Rastreamento */}
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Código de Rastreamento (Correios / Envio)</label>
+              <input
+                type="text"
+                placeholder="Ex: AA123456789BR ou NL987654321BR"
+                value={formData.trackingCode || ''}
+                onChange={(e) => setFormData({ ...formData, trackingCode: e.target.value.toUpperCase() })}
+                className="input-field"
+              />
+            </div>
+
             {/* Observações */}
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Observações do Pedido</label>

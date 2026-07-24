@@ -1,10 +1,12 @@
 import React from 'react';
-import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon } from 'lucide-react';
+import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Store, ExternalLink, UserCheck } from 'lucide-react';
 
 export const Header = ({
   onNewItem,
   onNewReservation,
   onNewCustomer,
+  onOpenStorefront,
+  onOpenCustomerPortal,
   searchQuery,
   setSearchQuery,
   onToggleMobileMenu,
@@ -65,6 +67,30 @@ export const Header = ({
 
       {/* Action Buttons & User Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
+        {onOpenStorefront && (
+          <button
+            onClick={onOpenStorefront}
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8125rem', padding: '8px 12px', borderColor: 'rgba(56, 189, 248, 0.3)', color: 'var(--accent-cyan)' }}
+            title="Abrir Vitrine Pública dos Clientes"
+          >
+            <Store size={16} />
+            <span className="hide-on-xs">Vitrine Pública</span>
+          </button>
+        )}
+
+        {onOpenCustomerPortal && (
+          <button
+            onClick={onOpenCustomerPortal}
+            className="btn btn-secondary"
+            style={{ fontSize: '0.8125rem', padding: '8px 12px', borderColor: 'rgba(168, 85, 247, 0.3)', color: 'var(--accent-purple)' }}
+            title="Abrir Portal do Colecionador"
+          >
+            <UserCheck size={16} />
+            <span className="hide-on-xs">Portal Colecionador</span>
+          </button>
+        )}
+
         <button onClick={onNewCustomer} className="btn btn-secondary" style={{ fontSize: '0.8125rem', padding: '8px 12px' }}>
           <UserPlus size={16} />
           <span className="hide-on-xs">+ Cliente</span>

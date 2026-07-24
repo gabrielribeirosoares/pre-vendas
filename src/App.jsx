@@ -13,6 +13,8 @@ import { ModalItemForm } from './components/ModalItemForm';
 import { ModalReservationForm } from './components/ModalReservationForm';
 import { ModalCustomerForm } from './components/ModalCustomerForm';
 import { ModalWhatsApp } from './components/ModalWhatsApp';
+import { PublicStorefrontView } from './components/PublicStorefrontView';
+import { CustomerPortalView } from './components/CustomerPortalView';
 
 import {
   INITIAL_ITEMS,
@@ -73,6 +75,17 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('diecast_sidebar_collapsed') === 'true';
+  });
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('diecast_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   // Persistent Data States
   const [items, setItems] = useState(() => loadState(STORAGE_KEYS.ITEMS, INITIAL_ITEMS));
@@ -328,6 +341,32 @@ export default function App() {
     return <AuthView onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
   }
 
+  // Render Public Storefront View if active
+  if (currentTab === 'storefront') {
+    return (
+      <PublicStorefrontView
+        items={items}
+        settings={settings}
+        onBackToAdmin={() => setCurrentTab('dashboard')}
+        onOpenCustomerPortal={() => setCurrentTab('customer_portal')}
+      />
+    );
+  }
+
+  // Render Customer Portal View if active
+  if (currentTab === 'customer_portal') {
+    return (
+      <CustomerPortalView
+        items={items}
+        reservations={reservations}
+        customers={customers}
+        settings={settings}
+        onBackToStorefront={() => setCurrentTab('storefront')}
+        onBackToAdmin={() => setCurrentTab('dashboard')}
+      />
+    );
+  }
+
   // Render Main Application when logged in
   return (
     <div className="app-container">
@@ -342,6 +381,8 @@ export default function App() {
         }}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebarCollapse}
         settings={settings}
       />
 
@@ -351,6 +392,8 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onToggleMobileMenu={() => setIsMobileOpen(!isMobileOpen)}
+          onOpenStorefront={() => setCurrentTab('storefront')}
+          onOpenCustomerPortal={() => setCurrentTab('customer_portal')}
           user={user}
           onLogout={handleLogout}
           settings={settings}
@@ -385,6 +428,8 @@ export default function App() {
             <CatalogView
               items={items}
               reservations={reservations}
+              customers={customers}
+              settings={settings}
               searchQuery={searchQuery}
               onNewItem={() => {
                 setItemToEdit(null);
@@ -408,6 +453,7 @@ export default function App() {
               reservations={reservations}
               items={items}
               customers={customers}
+              settings={settings}
               searchQuery={searchQuery}
               onNewReservation={() => {
                 setReservationToEdit(null);

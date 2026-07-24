@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers, MessageCircle } from 'lucide-react';
 import { formatBRL } from '../utils/helpers';
 import { BRANDS, ITEM_STATUSES } from '../data/initialData';
+import { ModalBatchWhatsApp } from './ModalBatchWhatsApp';
 
 export const CatalogView = ({
   items,
   reservations,
+  customers = [],
+  settings,
   searchQuery,
   onEditItem,
   onDeleteItem,
@@ -14,6 +17,7 @@ export const CatalogView = ({
 }) => {
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [batchWhatsAppItem, setBatchWhatsAppItem] = useState(null);
 
   // Filter Items
   const filteredItems = items.filter((item) => {
@@ -216,6 +220,17 @@ export const CatalogView = ({
                       <Plus size={16} /> + Reserva
                     </button>
 
+                    {itemReservations.length > 0 && (
+                      <button
+                        onClick={() => setBatchWhatsAppItem(item)}
+                        className="btn btn-whatsapp"
+                        style={{ padding: '8px 10px', fontSize: '0.8125rem' }}
+                        title="Notificar Chegada aos Colecionadores no WhatsApp"
+                      >
+                        <MessageCircle size={16} /> Notificar
+                      </button>
+                    )}
+
                     <button
                       onClick={() => onEditItem(item)}
                       className="btn btn-icon"
@@ -238,6 +253,18 @@ export const CatalogView = ({
             );
           })}
         </div>
+      )}
+
+      {/* Batch WhatsApp Modal */}
+      {batchWhatsAppItem && (
+        <ModalBatchWhatsApp
+          isOpen={!!batchWhatsAppItem}
+          onClose={() => setBatchWhatsAppItem(null)}
+          item={batchWhatsAppItem}
+          reservations={reservations}
+          customers={customers}
+          settings={settings}
+        />
       )}
     </div>
   );

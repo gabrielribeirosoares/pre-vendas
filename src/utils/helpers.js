@@ -33,8 +33,60 @@ export const buildWhatsAppUrl = (phone, text) => {
   return `https://wa.me/${fullPhone}?text=${encodedText}`;
 };
 
-export const generateWhatsAppMessage = ({ type, customerName, itemName, sku, depositPaid, totalPrice, pixKey, releaseQuarter }) => {
-  const balance = totalPrice - depositPaid;
+export const buildTrackingUrl = (code) => {
+  if (!code) return '';
+  const cleanCode = code.trim().toUpperCase();
+  return `https://rastreamento.correios.com.br/app/index.php?codigo=${cleanCode}`;
+};
+
+export const compressImageFile = (file, maxWidth = 600, maxHeight = 600, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
+export const generateWhatsAppMessage = ({
+  type,
+  customerName,
+  itemName,
+  sku,
+  depositPaid,
+  totalPrice,
+  pixKey,
+  releaseQuarter,
+  trackingCode,
+}) => {
+  const balance = Math.max(0, totalPrice - depositPaid);
 
   if (type === 'deposit_reminder') {
     return `Olá ${customerName}! 🚘\n\nConfirmando sua reserva da miniatura em pré-venda:\n📌 *${itemName}* (SKU: ${sku})\n\n💰 Valor Total: ${formatBRL(totalPrice)}\n💵 Sinal Mínimo para Garantia: ${formatBRL(depositPaid > 0 ? depositPaid : 30)}\n\nChave PIX para confirmação: *${pixKey || 'Consulte chave'}*\n\nPor favor, envie o comprovante por aqui assim que efetuar o pagamento. Obrigado!`;
@@ -44,8 +96,18 @@ export const generateWhatsAppMessage = ({ type, customerName, itemName, sku, dep
     return `Olá ${customerName}! 🎉 Notícia excelente!\n\nSua miniatura em pré-venda chegou em nosso estoque:\n🏎️ *${itemName}* (SKU: ${sku})\n\n📊 Resumo da Reserva:\n- Valor Total: ${formatBRL(totalPrice)}\n- Sinal Pago: ${formatBRL(depositPaid)}\n- *Saldo Restante A Pagar*: ${formatBRL(balance)}\n\nChave PIX para quitação: *${pixKey || 'Consulte chave'}*\n\nAssim que quitado o saldo, providenciaremos o envio/retirada imediata!`;
   }
 
+  if (type === 'tracking_info') {
+    const trackingLink = buildTrackingUrl(trackingCode);
+    return `Olá ${customerName}! 📦 Seu pedido foi enviado!\n\nModelo: *${itemName}* (${sku})\nCódigo de Rastreamento: *${trackingCode || 'Solicitar via chat'}*\n\nAcompanhe seu envio aqui:\n${trackingLink || 'Rastreie pelo site dos Correios'}\n\nQualquer dúvida estamos à disposição!`;
+  }
+
   if (type === 'general_status') {
-    return `Olá ${customerName}! 📦 Atualização sobre sua pré-venda:\n\nModelo: *${itemName}* (${sku})\nChegada Prevista: *${releaseQuarter || 'Em breve'}*\nStatus da Reserva: Sinal Pago (${formatBRL(depositPaid)} de ${formatBRL(totalPrice)}).\n\nQualquer dúvida estamos à disposição!`;
+    let msg = `Olá ${customerName}! 📦 Atualização sobre sua pré-venda:\n\nModelo: *${itemName}* (${sku})\nChegada Prevista: *${releaseQuarter || 'Em breve'}*\nStatus da Reserva: Sinal Pago (${formatBRL(depositPaid)} de ${formatBRL(totalPrice)}).`;
+    if (trackingCode) {
+      msg += `\nRastreio: ${trackingCode}`;
+    }
+    msg += `\n\nQualquer dúvida estamos à disposição!`;
+    return msg;
   }
 
   return `Olá ${customerName}! Entrando em contato sobre sua pré-venda da miniatura *${itemName}*.`;

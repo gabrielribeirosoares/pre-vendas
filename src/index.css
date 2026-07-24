@@ -275,40 +275,51 @@ h1, h2, h3, h4, h5, h6, .font-display {
   color: var(--text-primary);
 }
 
-/* Tables Responsive */
+/* Tables Responsive Layout (No Horizontal Scrollbar) */
 .table-container {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
+  box-shadow: var(--card-shadow);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.875rem;
-  min-width: 680px;
+  font-size: 0.8125rem;
+  table-layout: auto;
 }
 
 .data-table th {
   background: rgba(255, 255, 255, 0.03);
-  padding: 14px 18px;
+  padding: 10px 12px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
 .data-table td {
-  padding: 14px 18px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: 16px;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-right: 16px;
 }
 
 .data-table tbody tr {
@@ -317,6 +328,157 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 .data-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* Custom Status Selector in Tables */
+.status-select {
+  height: 32px;
+  padding: 4px 24px 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  width: 100%;
+  max-width: 135px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.status-select:focus {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+/* Desktop vs Mobile Reservation View Switching */
+.desktop-only-table {
+  display: block;
+}
+
+.mobile-only-cards {
+  display: none;
+}
+
+@media (max-width: 840px) {
+  .desktop-only-table {
+    display: none !important;
+  }
+
+  .mobile-only-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+/* Mobile Reservation Cards */
+.mobile-reservation-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.mobile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobile-card-header .customer-name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.mobile-card-header .customer-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mobile-card-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+}
+
+.mobile-card-item .item-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mobile-card-item .item-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.mobile-card-item .item-sku {
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  margin-top: 2px;
+}
+
+.mobile-card-values {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.mobile-card-values .label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mobile-card-values .value {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.mobile-card-values .value.cyan {
+  color: var(--accent-cyan);
+}
+
+.mobile-card-values .value.orange {
+  color: var(--accent-orange);
+}
+
+.mobile-card-values .value.green {
+  color: var(--accent-green);
+}
+
+.mobile-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Modals Mobile Friendly */

@@ -322,20 +322,20 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
         </div>
       </div>
 
-      {/* Supplier Order Table (Compact Layout without Horizontal Scrollbar) */}
-      <div className="table-container" style={{ overflowX: 'auto' }}>
-        <table className="data-table" style={{ width: '100%', minWidth: '100%', tableLayout: 'auto' }}>
+      {/* Desktop Supplier Order Table */}
+      <div className="table-container desktop-only-table" style={{ overflowX: 'auto' }}>
+        <table className="data-table" style={{ width: '100%', minWidth: '960px', tableLayout: 'auto' }}>
           <thead>
             <tr>
-              <th style={{ padding: '10px 12px', fontSize: '0.72rem' }}>Modelo Miniatura</th>
-              <th style={{ padding: '10px 10px', fontSize: '0.72rem', width: '85px' }}>Previsão</th>
-              <th style={{ padding: '10px 8px', fontSize: '0.72rem', textAlign: 'center', width: '110px' }}>Reservas</th>
-              <th style={{ padding: '10px 8px', fontSize: '0.72rem', textAlign: 'center', width: '130px' }}>Estoque Loja (Buffer)</th>
-              <th style={{ padding: '10px 8px', fontSize: '0.72rem', textAlign: 'center', width: '100px' }}>Qtd Total</th>
-              <th style={{ padding: '10px 8px', fontSize: '0.72rem', textAlign: 'right', width: '105px' }}>Custo Un. (Atacado)</th>
-              <th style={{ padding: '10px 8px', fontSize: '0.72rem', textAlign: 'right', width: '105px' }}>Preço Venda (Varejo)</th>
-              <th style={{ padding: '10px 10px', fontSize: '0.72rem', textAlign: 'right', width: '120px' }}>Custo Fatura</th>
-              <th style={{ padding: '10px 12px', fontSize: '0.72rem', textAlign: 'right', width: '125px' }}>Lucro Projetado</th>
+              <th style={{ padding: '12px 14px 12px 18px', fontSize: '0.72rem', minWidth: '220px' }}>Modelo Miniatura</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', width: '85px', textAlign: 'center' }}>Previsão</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', textAlign: 'center', width: '90px' }}>Reservas</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', textAlign: 'center', width: '125px' }}>Estoque Loja (Buffer)</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', textAlign: 'center', width: '90px' }}>Qtd Total</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', textAlign: 'right', width: '105px' }}>Custo Un. (Atacado)</th>
+              <th style={{ padding: '12px 8px', fontSize: '0.72rem', textAlign: 'right', width: '105px' }}>Preço Venda (Varejo)</th>
+              <th style={{ padding: '12px 10px', fontSize: '0.72rem', textAlign: 'right', width: '115px' }}>Custo Fatura</th>
+              <th style={{ padding: '12px 18px 12px 10px', fontSize: '0.72rem', textAlign: 'right', width: '125px' }}>Lucro Projetado</th>
             </tr>
           </thead>
           <tbody>
@@ -351,11 +351,11 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                 return (
                   <tr key={row.item.id}>
                     {/* Model Name & SKU */}
-                    <td style={{ padding: '10px 12px' }}>
+                    <td style={{ padding: '12px 14px 12px 18px', minWidth: '220px' }}>
                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.25, fontSize: '0.85rem' }}>
                         {row.item.name}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
                           {row.item.sku}
                         </span>
@@ -370,12 +370,12 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Release Quarter */}
-                    <td style={{ padding: '10px 10px', fontSize: '0.78rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 8px', fontSize: '0.78rem', color: 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap' }}>
                       {row.item.releaseQuarter || '-'}
                     </td>
 
                     {/* Client Reservations */}
-                    <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 700 }}>
+                    <td style={{ padding: '12px 8px', textAlign: 'center', fontWeight: 700 }}>
                       <span style={{
                         padding: '3px 8px',
                         borderRadius: '6px',
@@ -389,7 +389,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Editable Store Buffer */}
-                    <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>+</span>
                         <input
@@ -413,7 +413,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Total Order Quantity */}
-                    <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                       <span style={{
                         display: 'inline-block',
                         padding: '4px 10px',
@@ -428,7 +428,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Editable Wholesale Unit Cost */}
-                    <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>R$</span>
                         <input
@@ -439,7 +439,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                           onChange={(e) => handleWholesaleCostChange(row.item, e.target.value)}
                           className="input-field"
                           style={{
-                            width: '68px',
+                            width: '64px',
                             height: '30px',
                             padding: '2px 4px',
                             textAlign: 'right',
@@ -452,7 +452,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Editable Retail Sale Price */}
-                    <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                         <span style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}>R$</span>
                         <input
@@ -463,7 +463,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                           onChange={(e) => handleRetailPriceChange(row.item, e.target.value)}
                           className="input-field"
                           style={{
-                            width: '68px',
+                            width: '64px',
                             height: '30px',
                             padding: '2px 4px',
                             textAlign: 'right',
@@ -477,12 +477,12 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                     </td>
 
                     {/* Total Invoice Cost */}
-                    <td style={{ padding: '10px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                       {formatBRL(row.totalCost)}
                     </td>
 
                     {/* Projected Profit */}
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--accent-green)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 18px 12px 10px', textAlign: 'right', fontWeight: 700, color: 'var(--accent-green)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                       {formatBRL(row.projectedProfit)}
                       <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                         {row.profitMarginPct.toFixed(0)}% margem
@@ -496,7 +496,7 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
           {filteredReport.length > 0 && (
             <tfoot>
               <tr style={{ background: 'var(--table-header-bg)', fontWeight: 800 }}>
-                <td colSpan="2" style={{ padding: '10px 12px', color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
+                <td colSpan="2" style={{ padding: '12px 14px 12px 18px', color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
                   TOTAL GERAL ({filteredReport.length} modelos)
                 </td>
                 <td style={{ textAlign: 'center', color: 'var(--accent-cyan)', fontSize: '0.8125rem' }}>
@@ -515,13 +515,117 @@ export const SupplierOrdersView = ({ items = [], reservations = [], onSaveItem }
                 <td style={{ textAlign: 'right', color: 'var(--text-primary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                   {formatBRL(grandTotalCost)}
                 </td>
-                <td style={{ textAlign: 'right', color: 'var(--accent-green)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                <td style={{ textAlign: 'right', paddingRight: '18px', color: 'var(--accent-green)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                   {formatBRL(grandTotalProfit)}
                 </td>
               </tr>
             </tfoot>
           )}
         </table>
+      </div>
+
+      {/* Mobile Supplier Order Cards */}
+      <div className="mobile-only-cards">
+        {filteredReport.length === 0 ? (
+          <div className="glass-card" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Nenhum modelo encontrado.
+          </div>
+        ) : (
+          filteredReport.map((row) => {
+            const statusBadge = ITEM_STATUSES[row.item.status] || ITEM_STATUSES.pre_order_open;
+
+            return (
+              <div key={row.item.id} className="mobile-reservation-card">
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{row.item.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginTop: '2px' }}>
+                      SKU: {row.item.sku} • {row.brand?.name} • Previsão: {row.item.releaseQuarter || 'Em breve'}
+                    </div>
+                  </div>
+                  <span className="badge" style={{ color: statusBadge.color, backgroundColor: statusBadge.bg, flexShrink: 0 }}>
+                    {statusBadge.label}
+                  </span>
+                </div>
+
+                {/* Units breakdown */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Clientes</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>{row.clientUnits} un</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Estoque (+Buffer)</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.storeBuffer}
+                        onChange={(e) => handleBufferChange(row.item, e.target.value)}
+                        className="input-field"
+                        style={{ width: '42px', height: '26px', padding: '2px', textAlign: 'center', fontWeight: 700, fontSize: '0.8rem' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>un</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', display: 'block' }}>Qtd Total</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff', background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>
+                      {row.totalOrderQty} un
+                    </span>
+                  </div>
+                </div>
+
+                {/* Financial breakdown */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                  <div>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Custo Un. Atacado</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>R$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={row.wholesaleCost}
+                        onChange={(e) => handleWholesaleCostChange(row.item, e.target.value)}
+                        className="input-field"
+                        style={{ width: '60px', height: '26px', padding: '2px', textAlign: 'right', fontWeight: 700, fontSize: '0.8rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Preço Venda Varejo</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}>R$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={row.retailPrice}
+                        onChange={(e) => handleRetailPriceChange(row.item, e.target.value)}
+                        className="input-field"
+                        style={{ width: '60px', height: '26px', padding: '2px', textAlign: 'right', fontWeight: 700, fontSize: '0.8rem', color: 'var(--accent-cyan)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Custo Fatura Total</span>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatBRL(row.totalCost)}</span>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px' }}>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>Lucro Projetado</span>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'var(--accent-green)' }}>{formatBRL(row.projectedProfit)}</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginLeft: '4px' }}>({row.profitMarginPct.toFixed(0)}%)</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

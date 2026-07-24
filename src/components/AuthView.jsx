@@ -320,22 +320,6 @@ export const AuthView = ({ onAuthSuccess }) => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Nome da Loja / Perfil</label>
-              <div style={{ position: 'relative' }}>
-                <Store size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Diecast Club Pré-Vendas"
-                  value={storeName}
-                  onChange={(e) => setStoreName(e.target.value)}
-                  className="input-field"
-                  style={{ paddingLeft: '38px' }}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
               <label className="form-label">E-mail</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
