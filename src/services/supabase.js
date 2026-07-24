@@ -192,6 +192,45 @@ export const fetchPublicStoreBySlug = async (slug) => {
   }
   return null;
 };
+export const fetchCustomerStores = async (phoneOrEmail) => {
+  if (!isSupabaseConfigured || !supabase || !phoneOrEmail) return [];
+
+  try {
+    const cleanPhone = phoneOrEmail.replace(/\D/g, '');
+    const cleanEmail = phoneOrEmail.trim().toLowerCase();
+
+    // Query customers table where phone or email matches this collector
+    const { data: matchedCustomers } = await supabase
+      .from('customers')
+      .select('user_id');
+
+    if (!matchedCustomers || matchedCustomers.length === 0) return [];
+
+    const userIds = [...new Set(matchedCustomers.map((c) => c.user_id))];
+
+    // Fetch store_settings for these unique user_ids
+    const { data: stores } = await supabase
+      .from('store_settings')
+      .select('*')
+      .in('user_id', userIds);
+
+    if (!stores) return [];
+
+    return stores.map((s) => ({
+      name: s.store_name || 'Loja Parceira',
+      slug: (s.store_name || 'loja')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''),
+      logoUrl: s.logo_url || '',
+    }));
+  } catch (err) {
+    console.error('Erro ao buscar lojas do colecionador:', err);
+    return [];
+  }
+};
 
 export const saveSupabaseItem = async (item, userId) => {
   if (!isSupabaseConfigured || !supabase || !userId) return item;

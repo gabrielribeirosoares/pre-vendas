@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Share2, Check } from 'lucide-react';
+import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Share2, Check, ChevronDown, LayoutDashboard, Store } from 'lucide-react';
 
 export const Header = ({
   onNewItem,
@@ -51,8 +51,8 @@ export const Header = ({
       flexWrap: 'nowrap',
       overflowX: 'auto',
     }}>
-      {/* Mobile Toggle & Search Group */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 200px', minWidth: '180px', maxWidth: '300px' }}>
+      {/* Mobile Toggle Group */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Hamburger Menu Button (Mobile Only) */}
         <button
           onClick={onToggleMobileMenu}
@@ -62,23 +62,6 @@ export const Header = ({
         >
           <Menu size={20} color="var(--accent-cyan)" />
         </button>
-
-        {/* Search Input */}
-        <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
-          <Search
-            size={18}
-            color="var(--text-muted)"
-            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
-          />
-          <input
-            type="text"
-            placeholder="Buscar modelo, cliente ou SKU..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field"
-            style={{ paddingLeft: '38px', height: '40px', fontSize: '0.84rem' }}
-          />
-        </div>
       </div>
 
       {/* Action Buttons & User Profile */}
@@ -157,3 +140,5 @@ export const Header = ({
     </header>
   );
 };
+
+

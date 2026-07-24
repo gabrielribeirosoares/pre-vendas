@@ -9,6 +9,7 @@ import {
   Flame,
   X,
   Menu,
+  Store,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -220,6 +221,18 @@ export const Sidebar = ({
               </button>
             );
           })}
+
+          {/* STORE SWITCHER SECTION INSIDE SIDEBAR */}
+          {(!isCollapsed || isMobileOpen) && (
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 8px' }}>
+                LOJAS QUE SOU CLIENTE
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0 8px' }}>
+                Nenhuma outra loja vinculada.
+              </div>
+            </div>
+          )}
         </nav>
       </aside>
     </>

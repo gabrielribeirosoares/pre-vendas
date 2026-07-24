@@ -7,6 +7,7 @@ import {
   Filter,
   FileText,
   Package,
+  Search,
 } from 'lucide-react';
 import { formatBRL, buildTrackingUrl } from '../utils/helpers';
 import { RESERVATION_STATUSES } from '../data/initialData';
@@ -16,7 +17,7 @@ export const ReservationsView = ({
   reservations,
   items,
   customers,
-  searchQuery,
+  searchQuery: externalSearchQuery,
   settings,
   onNewReservation,
   onEditReservation,
@@ -25,18 +26,21 @@ export const ReservationsView = ({
   onOpenWhatsApp,
 }) => {
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [localSearch, setLocalSearch] = useState('');
   const [receiptReservation, setReceiptReservation] = useState(null);
+
+  const activeSearch = localSearch || externalSearchQuery || '';
 
   const filteredReservations = reservations.filter((res) => {
     const customer = customers.find((c) => c.id === res.customerId);
     const item = items.find((i) => i.id === res.itemId);
 
     const matchesSearch =
-      !searchQuery ||
-      (customer && customer.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (customer && customer.phone.includes(searchQuery)) ||
-      (item && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item && item.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+      !activeSearch ||
+      (customer && customer.name.toLowerCase().includes(activeSearch.toLowerCase())) ||
+      (customer && customer.phone.includes(activeSearch)) ||
+      (item && item.name.toLowerCase().includes(activeSearch.toLowerCase())) ||
+      (item && item.sku.toLowerCase().includes(activeSearch.toLowerCase()));
 
     const matchesStatus = selectedStatus === 'all' || res.status === selectedStatus;
 
@@ -80,6 +84,23 @@ export const ReservationsView = ({
             <option key={key} value={key}>{st.label}</option>
           ))}
         </select>
+
+        {/* Search Input inside Section Filter Bar */}
+        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+          <Search
+            size={16}
+            color="var(--text-muted)"
+            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por cliente, modelo ou SKU..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            className="input-field"
+            style={{ paddingLeft: '36px', height: '38px', fontSize: '0.84rem' }}
+          />
+        </div>
       </div>
 
       {/* Desktop Table View */}

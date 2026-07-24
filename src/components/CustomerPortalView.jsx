@@ -270,11 +270,29 @@ export const CustomerPortalView = ({
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {session && (
-              <button onClick={handleLogout} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-red)' }}>
-                <LogOut size={14} /> Sair
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }} className="hide-on-xs">
+                  {session.name}
+                </span>
+                <button
+                  onClick={() => {
+                    const selectStore = prompt('Digite o slug da loja que deseja acessar (ex: gabriel-minis, teste2):');
+                    if (selectStore) {
+                      window.location.href = `/loja/${selectStore.trim().toLowerCase()}`;
+                    }
+                  }}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', borderColor: 'rgba(56, 189, 248, 0.3)', color: 'var(--accent-cyan)' }}
+                  title="Trocar de Loja"
+                >
+                  <Store size={14} /> Trocar Loja
+                </button>
+                <button onClick={handleLogout} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-red)' }}>
+                  <LogOut size={14} /> Sair
+                </button>
+              </div>
             )}
           </div>
         </div>

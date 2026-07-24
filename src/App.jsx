@@ -403,7 +403,22 @@ export default function App() {
     );
   }
 
-  // Render Auth Screen if not logged in
+  // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) and not logged in as Admin
+  const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
+
+  if (!user && isVisitingPublicStore) {
+    return (
+      <CustomerPortalView
+        items={items}
+        reservations={reservations}
+        customers={customers}
+        settings={settings}
+        onBackToStorefront={() => setCurrentTab('storefront')}
+      />
+    );
+  }
+
+  // Render Admin Auth Screen if not logged in
   if (!user) {
     return <AuthView settings={settings} onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
   }

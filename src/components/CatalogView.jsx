@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers, MessageCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers, MessageCircle, Search } from 'lucide-react';
 import { formatBRL } from '../utils/helpers';
 import { BRANDS, ITEM_STATUSES } from '../data/initialData';
 import { ModalBatchWhatsApp } from './ModalBatchWhatsApp';
@@ -9,7 +9,7 @@ export const CatalogView = ({
   reservations,
   customers = [],
   settings,
-  searchQuery,
+  searchQuery: externalSearchQuery,
   onEditItem,
   onDeleteItem,
   onNewReservationForItem,
@@ -17,14 +17,18 @@ export const CatalogView = ({
 }) => {
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [localSearch, setLocalSearch] = useState('');
   const [batchWhatsAppItem, setBatchWhatsAppItem] = useState(null);
+
+  const activeSearch = localSearch || externalSearchQuery || '';
 
   // Filter Items
   const filteredItems = items.filter((item) => {
     const matchesSearch =
-      !searchQuery ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      !activeSearch ||
+      item.name.toLowerCase().includes(activeSearch.toLowerCase()) ||
+      item.sku.toLowerCase().includes(activeSearch.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(activeSearch.toLowerCase()));
 
     const matchesBrand = selectedBrand === 'all' || item.brandId === selectedBrand;
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
@@ -83,6 +87,23 @@ export const CatalogView = ({
             <option key={key} value={key}>{st.label}</option>
           ))}
         </select>
+
+        {/* Search Input inside Section Filter Bar */}
+        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+          <Search
+            size={16}
+            color="var(--text-muted)"
+            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por modelo, fabricante ou SKU..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            className="input-field"
+            style={{ paddingLeft: '36px', height: '38px', fontSize: '0.84rem' }}
+          />
+        </div>
       </div>
 
       {/* Grid of Items */}
