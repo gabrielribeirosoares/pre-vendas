@@ -1,31 +1,46 @@
-import React from 'react';
-import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Store, ExternalLink, UserCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Share2, Check } from 'lucide-react';
 
 export const Header = ({
   onNewItem,
   onNewReservation,
   onNewCustomer,
-  onOpenStorefront,
-  onOpenCustomerPortal,
   searchQuery,
   setSearchQuery,
   onToggleMobileMenu,
+  onToggleSidebarCollapse,
   user,
   onLogout,
   settings,
   onToggleTheme,
 }) => {
+  const [copiedLink, setCopiedLink] = useState(false);
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
   const storeDisplayName = settings?.storeName || user?.user_metadata?.store_name || 'Minha Loja';
   const isLight = settings?.themeMode === 'light';
 
+  const handleCopyStoreLink = () => {
+    // Copy current site URL
+    const storeUrl = window.location.origin;
+    navigator.clipboard.writeText(storeUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleMenuClick = () => {
+    if (window.innerWidth <= 768) {
+      if (onToggleMobileMenu) onToggleMobileMenu();
+    } else {
+      if (onToggleSidebarCollapse) onToggleSidebarCollapse();
+    }
+  };
+
   return (
     <header style={{
-      minHeight: '64px',
       background: 'var(--header-bg)',
-      backdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(16px)',
       borderBottom: '1px solid var(--border-color)',
-      padding: '10px 16px',
+      padding: '12px 20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -33,18 +48,19 @@ export const Header = ({
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      flexWrap: 'wrap',
+      flexWrap: 'nowrap',
+      overflowX: 'auto',
     }}>
       {/* Mobile Toggle & Search Group */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '220px' }}>
-        {/* Hamburger Menu Button (Mobile) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 200px', minWidth: '180px', maxWidth: '300px' }}>
+        {/* Hamburger Menu Button (Mobile Only) */}
         <button
           onClick={onToggleMobileMenu}
           className="btn btn-icon mobile-menu-btn"
           title="Abrir Menu"
           aria-label="Abrir Menu"
         >
-          <Menu size={20} />
+          <Menu size={20} color="var(--accent-cyan)" />
         </button>
 
         {/* Search Input */}
@@ -67,29 +83,22 @@ export const Header = ({
 
       {/* Action Buttons & User Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
-        {onOpenStorefront && (
-          <button
-            onClick={onOpenStorefront}
-            className="btn btn-secondary"
-            style={{ fontSize: '0.8125rem', padding: '8px 12px', borderColor: 'rgba(56, 189, 248, 0.3)', color: 'var(--accent-cyan)' }}
-            title="Abrir Vitrine Pública dos Clientes"
-          >
-            <Store size={16} />
-            <span className="hide-on-xs">Vitrine Pública</span>
-          </button>
-        )}
-
-        {onOpenCustomerPortal && (
-          <button
-            onClick={onOpenCustomerPortal}
-            className="btn btn-secondary"
-            style={{ fontSize: '0.8125rem', padding: '8px 12px', borderColor: 'rgba(168, 85, 247, 0.3)', color: 'var(--accent-purple)' }}
-            title="Abrir Portal do Colecionador"
-          >
-            <UserCheck size={16} />
-            <span className="hide-on-xs">Portal Colecionador</span>
-          </button>
-        )}
+        {/* Copy Store Link Button */}
+        <button
+          onClick={handleCopyStoreLink}
+          className="btn btn-secondary"
+          style={{
+            fontSize: '0.8125rem',
+            padding: '8px 12px',
+            borderColor: copiedLink ? 'rgba(16, 185, 129, 0.4)' : 'rgba(56, 189, 248, 0.3)',
+            color: copiedLink ? 'var(--accent-green)' : 'var(--accent-cyan)',
+            gap: '6px',
+          }}
+          title="Copiar link da vitrine/loja para enviar aos seus clientes"
+        >
+          {copiedLink ? <Check size={16} color="var(--accent-green)" /> : <Share2 size={16} />}
+          <span className="hide-on-xs">{copiedLink ? 'Link Copiado!' : 'Divulgar Loja'}</span>
+        </button>
 
         <button onClick={onNewCustomer} className="btn btn-secondary" style={{ fontSize: '0.8125rem', padding: '8px 12px' }}>
           <UserPlus size={16} />

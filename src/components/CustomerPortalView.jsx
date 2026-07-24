@@ -271,16 +271,6 @@ export const CustomerPortalView = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {onBackToStorefront && (
-              <button onClick={onBackToStorefront} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px' }}>
-                <Store size={14} /> Vitrine
-              </button>
-            )}
-            {onBackToAdmin && (
-              <button onClick={onBackToAdmin} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-cyan)' }}>
-                <ArrowLeft size={14} /> Painel Lojista
-              </button>
-            )}
             {session && (
               <button onClick={handleLogout} className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px', gap: '5px', color: 'var(--accent-red)' }}>
                 <LogOut size={14} /> Sair

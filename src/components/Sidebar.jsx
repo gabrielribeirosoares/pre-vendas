@@ -8,8 +8,7 @@ import {
   Settings,
   Flame,
   X,
-  ChevronLeft,
-  ChevronRight,
+  Menu,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -69,65 +68,81 @@ export const Sidebar = ({
       >
         {/* Brand Header */}
         <div style={{
-          padding: isCollapsed && !isMobileOpen ? '16px 10px' : '20px 16px',
+          padding: isCollapsed && !isMobileOpen ? '16px 8px' : '18px 16px',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: isCollapsed && !isMobileOpen ? 'center' : 'space-between',
+          gap: '8px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, justifyContent: 'center' }}>
-            {settings?.logoUrl ? (
-              <img
-                src={settings.logoUrl}
-                alt="Logo da Loja"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  objectFit: 'cover',
-                  flexShrink: 0,
-                  border: '1px solid var(--border-color)',
-                }}
-                title={settings?.storeName}
-              />
-            ) : (
-              <div
-                title={settings?.storeName}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
+          {isCollapsed && !isMobileOpen ? (
+            <button
+              onClick={onToggleCollapse}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Expandir Menu"
+            >
+              {settings?.logoUrl ? (
+                <img
+                  src={settings.logoUrl}
+                  alt="Logo"
+                  style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+                />
+              ) : (
+                <div style={{
+                  width: '38px', height: '38px', borderRadius: '10px',
                   background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 4px 16px rgba(56, 189, 248, 0.3)',
-                }}
-              >
-                <Flame size={20} color="#ffffff" />
-              </div>
-            )}
-
-            {(!isCollapsed || isMobileOpen) && (
-              <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                <h1 style={{
-                  fontSize: '0.92rem',
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  lineHeight: 1.15,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
                 }}>
-                  {settings?.storeName || 'DIECAST PRE-ORDER'}
-                </h1>
-                <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 600, letterSpacing: '0.05em' }}>
-                  GESTOR DE PRÉ-VENDAS
-                </span>
+                  <Flame size={20} color="#ffffff" />
+                </div>
+              )}
+            </button>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                {settings?.logoUrl ? (
+                  <img
+                    src={settings.logoUrl}
+                    alt="Logo da Loja"
+                    style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--border-color)' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '38px', height: '38px', borderRadius: '10px',
+                    background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    boxShadow: '0 4px 16px rgba(56, 189, 248, 0.3)',
+                  }}>
+                    <Flame size={20} color="#ffffff" />
+                  </div>
+                )}
+
+                <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                  <h1 style={{
+                    fontSize: '0.92rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.15,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {settings?.storeName || 'DIECAST PRE-ORDER'}
+                  </h1>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--accent-cyan)', fontWeight: 600, letterSpacing: '0.05em' }}>
+                    GESTOR DE PRÉ-VENDAS
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
+
+              {!isMobileOpen && onToggleCollapse && (
+                <button
+                  onClick={onToggleCollapse}
+                  className="btn btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0, border: 'none', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', flexShrink: 0 }}
+                  title="Recolher Menu"
+                >
+                  <Menu size={16} />
+                </button>
+              )}
+            </>
+          )}
 
           {/* Close button on mobile */}
           {isMobileOpen && (
@@ -206,31 +221,6 @@ export const Sidebar = ({
             );
           })}
         </nav>
-
-        {/* Desktop Collapse Toggle Button */}
-        {!isMobileOpen && (
-          <div style={{
-            padding: '12px 8px',
-            borderTop: '1px solid var(--border-color)',
-            display: 'flex',
-            justifyContent: isCollapsed ? 'center' : 'flex-end',
-          }}>
-            <button
-              onClick={onToggleCollapse}
-              className="btn btn-secondary"
-              style={{
-                width: isCollapsed ? '42px' : 'auto',
-                height: '38px',
-                padding: isCollapsed ? '0' : '0 12px',
-                fontSize: '0.78rem',
-                gap: '6px',
-              }}
-              title={isCollapsed ? 'Expandir Menu' : 'Recolher Menu'}
-            >
-              {isCollapsed ? <ChevronRight size={18} /> : <><ChevronLeft size={18} /> <span>Recolher Menu</span></>}
-            </button>
-          </div>
-        )}
       </aside>
     </>
   );

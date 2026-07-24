@@ -392,6 +392,7 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onToggleMobileMenu={() => setIsMobileOpen(!isMobileOpen)}
+          onToggleSidebarCollapse={handleToggleSidebarCollapse}
           onOpenStorefront={() => setCurrentTab('storefront')}
           onOpenCustomerPortal={() => setCurrentTab('customer_portal')}
           user={user}

@@ -211,42 +211,45 @@ export const CatalogView = ({
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <button
                       onClick={() => onNewReservationForItem(item)}
                       className="btn btn-primary"
-                      style={{ flex: 1, padding: '8px 12px', fontSize: '0.8125rem' }}
+                      style={{ width: '100%', padding: '10px 14px', fontSize: '0.84rem' }}
                     >
-                      <Plus size={16} /> + Reserva
+                      <Plus size={16} /> Nova Reserva
                     </button>
 
-                    {itemReservations.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {itemReservations.length > 0 && (
+                        <button
+                          onClick={() => setBatchWhatsAppItem(item)}
+                          className="btn btn-whatsapp"
+                          style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem' }}
+                          title="Notificar Chegada aos Colecionadores no WhatsApp"
+                        >
+                          <MessageCircle size={16} /> Notificar ({itemReservations.length})
+                        </button>
+                      )}
+
                       <button
-                        onClick={() => setBatchWhatsAppItem(item)}
-                        className="btn btn-whatsapp"
-                        style={{ padding: '8px 10px', fontSize: '0.8125rem' }}
-                        title="Notificar Chegada aos Colecionadores no WhatsApp"
+                        onClick={() => onEditItem(item)}
+                        className="btn btn-icon"
+                        title="Editar Modelo"
+                        style={{ flex: itemReservations.length > 0 ? '0 0 auto' : 1, padding: '8px 12px' }}
                       >
-                        <MessageCircle size={16} /> Notificar
+                        <Edit2 size={16} />
                       </button>
-                    )}
 
-                    <button
-                      onClick={() => onEditItem(item)}
-                      className="btn btn-icon"
-                      title="Editar Modelo"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => onDeleteItem(item.id)}
-                      className="btn btn-icon"
-                      title="Excluir Modelo"
-                      style={{ color: '#ef4444' }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                      <button
+                        onClick={() => onDeleteItem(item.id)}
+                        className="btn btn-icon"
+                        title="Excluir Modelo"
+                        style={{ color: '#ef4444', flex: itemReservations.length > 0 ? '0 0 auto' : 1, padding: '8px 12px' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
