@@ -88,11 +88,35 @@ export default function App() {
     });
   };
 
+  // Helper to extract store name from URL path slug (e.g. /loja/gabriel-minis -> Gabriel Minis)
+  const getInitialStoreNameFromUrl = () => {
+    try {
+      const pathname = window.location.pathname;
+      if (pathname.includes('/loja/')) {
+        const slug = pathname.split('/loja/')[1]?.replace(/\/$/, '').trim();
+        if (slug) {
+          return slug
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        }
+      }
+    } catch {}
+    return null;
+  };
+
   // Persistent Data States
   const [items, setItems] = useState(() => loadState(STORAGE_KEYS.ITEMS, INITIAL_ITEMS));
   const [customers, setCustomers] = useState(() => loadState(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
-  const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
+  const [settings, setSettings] = useState(() => {
+    const loaded = loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    const urlStoreName = getInitialStoreNameFromUrl();
+    if (urlStoreName) {
+      return { ...loaded, storeName: urlStoreName };
+    }
+    return loaded;
+  });
 
   // Check if URL has a store slug (e.g., /loja/gabriel-minis) when visiting unauthenticated
   useEffect(() => {
