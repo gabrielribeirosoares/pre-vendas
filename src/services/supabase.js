@@ -80,7 +80,7 @@ export const fetchSupabaseData = async (userId) => {
       supabase.from('items').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabase.from('customers').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabase.from('reservations').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      supabase.from('store_settings').select('*').eq('user_id', userId).single(),
+      supabase.from('store_settings').select('*').eq('user_id', userId).maybeSingle(),
     ]);
 
     // Deduplicate items by SKU to prevent duplicated multiplying records from past saves
@@ -265,14 +265,35 @@ export const deleteSupabaseReservation = async (resId) => {
 
 export const saveSupabaseSettings = async (settings, userId) => {
   if (!isSupabaseConfigured || !supabase || !userId) return;
-  await supabase.from('store_settings').upsert({
-    user_id: userId,
-    store_name: settings.storeName || '',
-    pix_key: settings.pixKey || '',
-    primary_color: settings.primaryColor || '#38bdf8',
-    secondary_color: settings.secondaryColor || '#a855f7',
-    theme_mode: settings.themeMode || 'dark',
-    logo_url: settings.logoUrl || '',
-    favicon_url: settings.faviconUrl || '',
-  }, { onConflict: 'user_id' });
+  try {
+    const payload = {
+      user_id: userId,
+      store_name: settings.storeName || '',
+      pix_key: settings.pixKey || '',
+      primary_color: settings.primaryColor || '#38bdf8',
+      secondary_color: settings.secondaryColor || '#a855f7',
+      theme_mode: settings.themeMode || 'dark',
+      logo_url: settings.logoUrl || '',
+      favicon_url: settings.faviconUrl || '',
+    };
+
+    const { data: existing } = await supabase
+      .from('store_settings')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existing && existing.id) {
+      await supabase
+        .from('store_settings')
+        .update(payload)
+        .eq('user_id', userId);
+    } else {
+      await supabase
+        .from('store_settings')
+        .insert([payload]);
+    }
+  } catch (err) {
+    console.error('Erro ao salvar store_settings no Supabase:', err);
+  }
 };
