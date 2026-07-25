@@ -51,11 +51,9 @@ export const Header = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '12px',
-      position: 'sticky',
-      top: 0,
       zIndex: 100,
-      flexWrap: 'nowrap',
-      overflowX: 'auto',
+      position: 'relative',
+      overflow: 'visible',
     }}>
       {/* Mobile Toggle Group */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

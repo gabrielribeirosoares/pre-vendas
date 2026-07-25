@@ -299,8 +299,6 @@ export const CustomerPortalView = ({
           background: 'rgba(15, 23, 42, 0.8)',
           backdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border-color)',
-          position: 'sticky',
-          top: 0,
           zIndex: 100,
         }}>
           <div style={{
