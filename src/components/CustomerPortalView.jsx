@@ -252,38 +252,47 @@ export const CustomerPortalView = ({
       itemId: item.id,
       quantity: reserveQuantity,
       totalPrice,
-      notes: `Reserva via portal por ${session.name}${reserveNotes ? ` — ${reserveNotes}` : ''}`,
+      notes: `Reserva via portal: ${item.name} (${item.sku}) | Cliente: ${session.name}${reserveNotes ? ` | Obs: ${reserveNotes}` : ''}`,
     };
 
     const saved = await savePublicReservation(reservationData, storeUserId);
+    const newRes = saved || {
+      id: `res-${Date.now()}`,
+      customerId: customerMatch?.id || null,
+      itemId: item.id,
+      quantity: reserveQuantity,
+      depositPaid: 0,
+      totalPrice,
+      status: 'deposit_pending',
+      notes: reservationData.notes,
+      createdAt: new Date().toISOString(),
+    };
 
-    if (saved) {
-      // Send notification to store owner
-      await createNotification(storeUserId, {
-        type: 'new_reservation',
-        title: `Nova reserva de ${session.name}`,
-        message: `${session.name} reservou ${reserveQuantity}x ${item.name} (${item.sku}) — Total: ${formatBRL(totalPrice)}`,
-        metadata: {
-          reservationId: saved.id,
-          customerName: session.name,
-          customerPhone: session.phone,
-          itemName: item.name,
-          itemSku: item.sku,
-          quantity: reserveQuantity,
-          totalPrice,
-        },
-      });
+    // Send notification to store owner
+    await createNotification(storeUserId, {
+      type: 'new_reservation',
+      title: `Nova reserva de ${session.name}`,
+      message: `${session.name} reservou ${reserveQuantity}x ${item.name} (${item.sku}) — Total: ${formatBRL(totalPrice)}`,
+      metadata: {
+        reservationId: newRes.id,
+        customerName: session.name,
+        customerPhone: session.phone,
+        itemName: item.name,
+        itemSku: item.sku,
+        quantity: reserveQuantity,
+        totalPrice,
+      },
+    });
 
-      setReserveSuccess(item.id);
-      setReservingItemId(null);
-      setReserveQuantity(1);
-      setReserveNotes('');
+    setReserveSuccess(item.id);
+    setReservingItemId(null);
+    setReserveQuantity(1);
+    setReserveNotes('');
 
-      // Callback to refresh data
-      if (onReservationCreated) onReservationCreated(saved);
+    // Callback to refresh data
+    if (onReservationCreated) onReservationCreated(newRes);
 
-      setTimeout(() => setReserveSuccess(null), 3000);
-    }
+    setTimeout(() => setReserveSuccess(null), 3000);
 
     setReserveLoading(false);
   };

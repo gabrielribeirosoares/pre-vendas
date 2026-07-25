@@ -378,8 +378,8 @@ export const saveSupabaseReservation = async (res, userId) => {
   if (!isSupabaseConfigured || !supabase || !userId) return res;
   const payload = {
     user_id: userId,
-    customer_id: res.customerId && !res.customerId.startsWith('cust-') ? res.customerId : null,
-    item_id: res.itemId && !res.itemId.startsWith('item-') ? res.itemId : null,
+    customer_id: isValidUUID(res.customerId) ? res.customerId : null,
+    item_id: isValidUUID(res.itemId) ? res.itemId : null,
     quantity: res.quantity || 1,
     deposit_paid: res.depositPaid || 0,
     total_price: res.totalPrice || 0,
@@ -387,7 +387,7 @@ export const saveSupabaseReservation = async (res, userId) => {
     notes: res.notes || '',
   };
 
-  if (res.id && !res.id.startsWith('res-')) {
+  if (isValidUUID(res.id)) {
     payload.id = res.id;
   }
 
@@ -452,6 +452,8 @@ export const saveSupabaseSettings = async (settings, userId) => {
   }
 };
 
+const isValidUUID = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 // ============================================================
 // PUBLIC RESERVATION (Customer creates reservation from portal)
 // ============================================================
@@ -461,8 +463,8 @@ export const savePublicReservation = async (reservation, storeUserId) => {
   try {
     const payload = {
       user_id: storeUserId,
-      customer_id: reservation.customerId || null,
-      item_id: reservation.itemId || null,
+      customer_id: isValidUUID(reservation.customerId) ? reservation.customerId : null,
+      item_id: isValidUUID(reservation.itemId) ? reservation.itemId : null,
       quantity: reservation.quantity || 1,
       deposit_paid: 0,
       total_price: reservation.totalPrice || 0,
