@@ -10,6 +10,7 @@ import {
   X,
   Menu,
   Store,
+  ShoppingBag,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -22,6 +23,11 @@ export const Sidebar = ({
   onToggleCollapse,
   settings,
 }) => {
+  const customerStores = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('diecast_customer_stores') || '[]');
+    } catch { return []; }
+  })();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'catalog', label: 'Catálogo de Pré-Vendas', icon: Car, count: counts.items },
@@ -228,9 +234,35 @@ export const Sidebar = ({
               <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 8px' }}>
                 LOJAS QUE SOU CLIENTE
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0 8px' }}>
-                Nenhuma outra loja vinculada.
-              </div>
+
+              {customerStores.length === 0 ? (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0 8px' }}>
+                  Nenhuma outra loja vinculada.
+                </div>
+              ) : (
+                customerStores.map((st) => (
+                  <button
+                    key={st.slug}
+                    onClick={() => {
+                      window.location.href = `/loja/${st.slug}`;
+                    }}
+                    className="btn btn-secondary"
+                    style={{
+                      width: '100%',
+                      justify: 'flex-start',
+                      fontSize: '0.8rem',
+                      gap: '8px',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <ShoppingBag size={14} color="var(--accent-purple)" />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {st.name} (Ver Pedidos)
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           )}
         </nav>

@@ -733,33 +733,53 @@ export const CustomerPortalView = ({
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onUpgradeToStore) {
-                      onUpgradeToStore(session);
-                    } else {
-                      window.location.href = '/';
-                    }
-                  }}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    color: 'var(--accent-cyan)',
-                    textDecoration: 'none',
-                    padding: '8px 14px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'rgba(56, 189, 248, 0.1)',
-                    border: '1px solid rgba(56, 189, 248, 0.25)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <Store size={14} /> Crie sua própria loja
-                </button>
+                {(() => {
+                  const hasOwnStore = typeof localStorage !== 'undefined' && !!localStorage.getItem('diecast_demo_user');
+                  if (hasOwnStore) {
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onBackToAdmin) onBackToAdmin();
+                          else window.location.href = '/';
+                        }}
+                        className="btn btn-primary"
+                        style={{ padding: '8px 14px', fontSize: '0.8125rem', gap: '6px' }}
+                      >
+                        <Store size={16} /> Ir para Minha Loja (Painel Lojista)
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onUpgradeToStore) {
+                          onUpgradeToStore(session);
+                        } else {
+                          window.location.href = '/';
+                        }
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: 'var(--accent-cyan)',
+                        textDecoration: 'none',
+                        padding: '8px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        border: '1px solid rgba(56, 189, 248, 0.25)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <Store size={14} /> Crie sua própria loja
+                    </button>
+                  );
+                })()}
 
                 <button onClick={handleContactStore} className="btn btn-whatsapp" style={{ padding: '8px 14px', fontSize: '0.8125rem', gap: '6px' }}>
                   <MessageCircle size={16} /> Falar com a Loja

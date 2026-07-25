@@ -541,25 +541,64 @@ export default function App() {
     });
   };
 
-  const handleUpgradeToStore = (collectorSession) => {
-    const storeName = collectorSession?.name ? `${collectorSession.name} Minis` : 'Minha Loja Diecast';
+  const handleUpgradeToStore = async (collectorSession) => {
+    const name = collectorSession?.name || 'Nova Loja';
+    const storeName = `${name} Minis`;
+    const newStoreUserId = collectorSession?.id || `user-${Date.now()}`;
+
     const storeUser = {
-      id: collectorSession?.id || `user-${Date.now()}`,
+      id: newStoreUserId,
       email: collectorSession?.email || 'colecionador@loja.com',
       user_metadata: {
-        full_name: collectorSession?.name || 'Colecionador Lojista',
+        full_name: name,
         store_name: storeName,
       },
     };
 
+    // Store link where collector is a customer in localStorage so they can switch back
+    try {
+      const myCustomerStores = JSON.parse(localStorage.getItem('diecast_customer_stores') || '[]');
+      const visitedSlug = window.location.pathname.replace('/loja/', '') || 'gabriel-minis';
+      const visitedName = publicStoreData?.name || settings?.storeName || 'Gabriel Minis';
+
+      if (!myCustomerStores.some((s) => s.slug === visitedSlug)) {
+        myCustomerStores.push({ name: visitedName, slug: visitedSlug });
+        localStorage.setItem('diecast_customer_stores', JSON.stringify(myCustomerStores));
+      }
+    } catch (err) {
+      console.warn('Erro ao guardar loja parceira:', err);
+    }
+
+    // Save demo user session so F5 keeps the lojista logged in
     localStorage.setItem('diecast_demo_user', JSON.stringify(storeUser));
-    setUser(storeUser);
-    setSettings((prev) => ({
-      ...prev,
+
+    // Clear items, customers, reservations for the new store (clean slate)
+    setItems([]);
+    setCustomers([]);
+    setReservations([]);
+    setPublicStoreUserId(null);
+
+    // Create default settings for the new store
+    const newSettings = {
+      ...INITIAL_SETTINGS,
       storeName: storeName,
-    }));
+      storePhone: collectorSession?.phone || '',
+      storeEmail: collectorSession?.email || '',
+      logoUrl: '',
+    };
+
+    setSettings(newSettings);
+    setUser(storeUser);
     setCurrentTab('dashboard');
-    window.history.replaceState(null, '', '/');
+
+    // Save new store settings to Supabase if configured
+    if (isSupabaseConfigured) {
+      await saveSupabaseSettings(newSettings, newStoreUserId);
+    }
+
+    // Update URL to clean root path so F5 opens their own store admin panel
+    const newSlug = storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    window.history.pushState(null, '', `/loja/${newSlug}`);
   };
 
   if (!user && isVisitingPublicStore) {
