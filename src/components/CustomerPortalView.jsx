@@ -914,7 +914,7 @@ export const CustomerPortalView = ({
             )}
 
             {/* ===== RESERVAS TAB ===== */}
-            {activeTab === 'reservas' && (}
+            {activeTab === 'reservas' && (
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Package size={18} /> Minhas Reservas ({myReservations.length})
@@ -1082,6 +1082,7 @@ export const CustomerPortalView = ({
                 </div>
               )}
             </div>
+            )}
           </>
         )}
       </main>
