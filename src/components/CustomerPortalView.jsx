@@ -31,7 +31,7 @@ import {
 import { formatBRL, buildWhatsAppUrl, buildTrackingUrl } from '../utils/helpers';
 import { BRANDS, RESERVATION_STATUSES, ITEM_STATUSES } from '../data/initialData';
 import { ModalReceipt } from './ModalReceipt';
-import { savePublicReservation, createNotification } from '../services/supabase';
+import { savePublicReservation, createNotification, registerPublicCustomer } from '../services/supabase';
 
 // Status timeline order
 const STATUS_TIMELINE = [
@@ -80,6 +80,7 @@ export const CustomerPortalView = ({
   onBackToStorefront,
   onBackToAdmin,
   onReservationCreated,
+  onCustomerRegistered,
 }) => {
   const [session, setSession] = useState(() => getCustomerSession());
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
@@ -163,7 +164,7 @@ export const CustomerPortalView = ({
   };
 
   // Handle Register
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
@@ -186,38 +187,62 @@ export const CustomerPortalView = ({
 
     setLoading(true);
 
-    setTimeout(() => {
-      const accounts = getCustomerAccounts();
-      const exists = accounts.find(
-        (a) => a.email.toLowerCase() === email.trim().toLowerCase()
-      );
+    const accounts = getCustomerAccounts();
+    const exists = accounts.find(
+      (a) => a.email.toLowerCase() === email.trim().toLowerCase()
+    );
 
-      if (exists) {
-        setErrorMessage('Este e-mail já está cadastrado. Faça login.');
-        setLoading(false);
-        return;
-      }
+    if (exists) {
+      setErrorMessage('Este e-mail já está cadastrado. Faça login.');
+      setLoading(false);
+      return;
+    }
 
-      const newAccount = {
-        id: `customer-${Date.now()}`,
-        email: email.trim().toLowerCase(),
-        password,
+    const newAccount = {
+      id: `customer-${Date.now()}`,
+      email: email.trim().toLowerCase(),
+      password,
+      name: fullName.trim(),
+      phone: cleanPhone,
+      createdAt: new Date().toISOString(),
+    };
+
+    accounts.push(newAccount);
+    saveCustomerAccounts(accounts);
+
+    // Register customer in store owner's customers table in Supabase
+    if (storeUserId) {
+      const createdCust = await registerPublicCustomer({
         name: fullName.trim(),
         phone: cleanPhone,
-        createdAt: new Date().toISOString(),
-      };
+        email: email.trim().toLowerCase(),
+      }, storeUserId);
 
-      accounts.push(newAccount);
-      saveCustomerAccounts(accounts);
+      if (createdCust) {
+        if (onCustomerRegistered) onCustomerRegistered(createdCust);
 
-      setSuccessMessage('Conta criada com sucesso! Faça login para acessar seus pedidos.');
-      setAuthMode('login');
-      setPassword('');
-      setConfirmPassword('');
-      setFullName('');
-      setPhone('');
-      setLoading(false);
-    }, 400);
+        // Send notification to store owner
+        await createNotification(storeUserId, {
+          type: 'new_customer',
+          title: `Novo cliente cadastrado!`,
+          message: `${fullName.trim()} (${cleanPhone}) criou uma conta pelo portal da loja.`,
+          metadata: {
+            customerId: createdCust.id,
+            name: fullName.trim(),
+            phone: cleanPhone,
+            email: email.trim().toLowerCase(),
+          },
+        });
+      }
+    }
+
+    setSuccessMessage('Conta criada com sucesso! Faça login para acessar seus pedidos.');
+    setAuthMode('login');
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+    setPhone('');
+    setLoading(false);
   };
 
   // Handle Logout

@@ -488,6 +488,14 @@ export default function App() {
   // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) and not logged in as Admin
   const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
 
+  const handleCustomerRegistered = (newCust) => {
+    setCustomers((prev) => {
+      const exists = prev.some((c) => c.id === newCust.id || (c.phone && newCust.phone && c.phone.replace(/\D/g, '') === newCust.phone.replace(/\D/g, '')));
+      if (exists) return prev;
+      return [newCust, ...prev];
+    });
+  };
+
   if (!user && isVisitingPublicStore) {
     // Show loading while fetching store data from Supabase
     if (publicStoreLoading) {
@@ -523,6 +531,7 @@ export default function App() {
         settings={settings}
         storeUserId={publicStoreUserId}
         onReservationCreated={handlePublicReservationCreated}
+        onCustomerRegistered={handleCustomerRegistered}
         onBackToStorefront={() => setCurrentTab('storefront')}
       />
     );
@@ -555,6 +564,7 @@ export default function App() {
         settings={settings}
         storeUserId={user?.id}
         onReservationCreated={handlePublicReservationCreated}
+        onCustomerRegistered={handleCustomerRegistered}
         onBackToStorefront={() => setCurrentTab('storefront')}
         onBackToAdmin={() => setCurrentTab('dashboard')}
       />

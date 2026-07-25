@@ -341,8 +341,10 @@ export const saveSupabaseItem = async (item, userId) => {
 
 export const deleteSupabaseItem = async (itemId) => {
   if (!isSupabaseConfigured || !supabase || !itemId) return;
-  if (!itemId.startsWith('item-')) {
+  try {
     await supabase.from('items').delete().eq('id', itemId);
+  } catch (err) {
+    console.error('[Supabase] Erro ao excluir item:', err);
   }
 };
 
@@ -356,7 +358,7 @@ export const saveSupabaseCustomer = async (cust, userId) => {
     notes: cust.notes || '',
   };
 
-  if (cust.id && !cust.id.startsWith('cust-')) {
+  if (isValidUUID(cust.id)) {
     payload.id = cust.id;
   }
 
@@ -372,8 +374,10 @@ export const saveSupabaseCustomer = async (cust, userId) => {
 
 export const deleteSupabaseCustomer = async (custId) => {
   if (!isSupabaseConfigured || !supabase || !custId) return;
-  if (!custId.startsWith('cust-')) {
+  try {
     await supabase.from('customers').delete().eq('id', custId);
+  } catch (err) {
+    console.error('[Supabase] Erro ao excluir cliente:', err);
   }
 };
 
@@ -406,8 +410,16 @@ export const saveSupabaseReservation = async (res, userId) => {
 
 export const deleteSupabaseReservation = async (resId) => {
   if (!isSupabaseConfigured || !supabase || !resId) return;
-  if (!resId.startsWith('res-')) {
-    await supabase.from('reservations').delete().eq('id', resId);
+  try {
+    console.log('[Supabase] Excluindo reserva:', resId);
+    const { error } = await supabase.from('reservations').delete().eq('id', resId);
+    if (error) {
+      console.error('[Supabase] Erro ao excluir reserva:', error);
+    } else {
+      console.log('[Supabase] Reserva excluída com sucesso:', resId);
+    }
+  } catch (err) {
+    console.error('[Supabase] Erro ao excluir reserva:', err);
   }
 };
 
@@ -457,6 +469,57 @@ export const saveSupabaseSettings = async (settings, userId) => {
 
 const isValidUUID = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
+export const registerPublicCustomer = async ({ name, phone, email }, storeUserId) => {
+  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+
+  try {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const { data: existingCust } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('user_id', storeUserId);
+
+    const match = (existingCust || []).find(c => (c.phone || '').replace(/\D/g, '') === cleanPhone);
+    if (match) {
+      return {
+        id: match.id,
+        name: match.name,
+        phone: match.phone,
+        notes: match.notes,
+        createdAt: match.created_at,
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('customers')
+      .insert([{
+        user_id: storeUserId,
+        name,
+        phone,
+        notes: `Cadastrado via Portal da Loja (E-mail: ${email})`,
+      }])
+      .select();
+
+    if (error) {
+      console.error('[Supabase] Erro ao cadastrar cliente público:', error);
+      return null;
+    }
+
+    if (data && data[0]) {
+      return {
+        id: data[0].id,
+        name: data[0].name,
+        phone: data[0].phone,
+        notes: data[0].notes,
+        createdAt: data[0].created_at,
+      };
+    }
+  } catch (err) {
+    console.error('[Supabase] Erro ao cadastrar cliente público:', err);
+  }
+  return null;
+};
+
 // ============================================================
 // PUBLIC RESERVATION (Customer creates reservation from portal)
 // ============================================================
@@ -468,35 +531,13 @@ export const savePublicReservation = async (reservation, storeUserId) => {
 
     // Auto-create/find customer in store's customers table if name & phone are provided
     if (!customerId && reservation.customerName && reservation.customerPhone) {
-      try {
-        const cleanPhone = reservation.customerPhone.replace(/\D/g, '');
-        // 1. Check if customer already exists for this store
-        const { data: existingCust } = await supabase
-          .from('customers')
-          .select('id, phone')
-          .eq('user_id', storeUserId);
-
-        const match = (existingCust || []).find(c => (c.phone || '').replace(/\D/g, '') === cleanPhone);
-        if (match) {
-          customerId = match.id;
-        } else {
-          // 2. Insert new customer for this store
-          const { data: newCust } = await supabase
-            .from('customers')
-            .insert([{
-              user_id: storeUserId,
-              name: reservation.customerName,
-              phone: reservation.customerPhone,
-              notes: 'Cadastrado automaticamente via Portal do Colecionador',
-            }])
-            .select();
-
-          if (newCust && newCust[0]) {
-            customerId = newCust[0].id;
-          }
-        }
-      } catch (custErr) {
-        console.warn('[Supabase] Aviso ao vincular cliente automático:', custErr);
+      const created = await registerPublicCustomer({
+        name: reservation.customerName,
+        phone: reservation.customerPhone,
+        email: reservation.customerEmail || '',
+      }, storeUserId);
+      if (created && created.id) {
+        customerId = created.id;
       }
     }
 
@@ -647,6 +688,10 @@ export const subscribeToPublicStore = (storeUserId, onDataChange) => {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations', filter: `user_id=eq.${storeUserId}` }, (payload) => {
       console.log('[Supabase Realtime] Alteração em reservations:', payload.eventType);
+      onDataChange();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'customers', filter: `user_id=eq.${storeUserId}` }, (payload) => {
+      console.log('[Supabase Realtime] Alteração em customers:', payload.eventType);
       onDataChange();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings', filter: `user_id=eq.${storeUserId}` }, (payload) => {
