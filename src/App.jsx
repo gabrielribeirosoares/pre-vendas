@@ -641,6 +641,22 @@ export default function App() {
       );
     }
 
+    const handleOpenMyStoreAdmin = () => {
+      try {
+        const demoUser = JSON.parse(localStorage.getItem('diecast_demo_user') || 'null');
+        if (demoUser) {
+          setUser(demoUser);
+          setPublicStoreUserId(null);
+          setCurrentTab('dashboard');
+          window.history.pushState(null, '', '/');
+        } else {
+          window.location.href = '/';
+        }
+      } catch {
+        window.location.href = '/';
+      }
+    };
+
     return (
       <CustomerPortalView
         items={items}
@@ -651,6 +667,7 @@ export default function App() {
         onReservationCreated={handlePublicReservationCreated}
         onCustomerRegistered={handleCustomerRegistered}
         onUpgradeToStore={handleUpgradeToStore}
+        onBackToAdmin={handleOpenMyStoreAdmin}
         onBackToStorefront={() => setCurrentTab('storefront')}
       />
     );
