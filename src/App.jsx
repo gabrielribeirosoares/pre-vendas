@@ -661,13 +661,9 @@ export default function App() {
     );
   }
 
-  // Render Admin Auth Screen if not logged in
-  if (!user && !isVisitingPublicStore) {
-    return <AuthView settings={settings} onAuthSuccess={handleAuthSuccess} />;
-  }
-
-  // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) and not logged in as Admin
   const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
+  const currentPathSlug = window.location.pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+  const isVisitingOtherStore = isVisitingPublicStore && Boolean(currentPathSlug) && currentPathSlug !== myOwnStoreSlug;
 
   const handleCustomerRegistered = (newCust) => {
     setCustomers((prev) => {
@@ -737,11 +733,24 @@ export default function App() {
     window.history.pushState(null, '', `/loja/${newSlug}`);
   };
 
-  const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
-  const currentPathSlug = window.location.pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+  // Render Loading Spinner during auth check
+  if (authLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-main)',
+        color: 'var(--accent-cyan)',
+        fontWeight: 600,
+      }}>
+        Carregando sistema de pré-vendas...
+      </div>
+    );
+  }
 
-  const isVisitingOtherStore = isVisitingPublicStore && Boolean(currentPathSlug) && currentPathSlug !== myOwnStoreSlug;
-
+  // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) or visiting another store
   if ((!user && isVisitingPublicStore) || isVisitingOtherStore) {
     // Show loading while fetching store data from Supabase
     if (publicStoreLoading) {
