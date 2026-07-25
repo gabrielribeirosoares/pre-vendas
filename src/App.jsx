@@ -206,7 +206,7 @@ export default function App() {
     }
   }, [user, storeSlug]);
 
-  // Load Remote Supabase Data on Auth Login (New accounts start empty)
+  // Load Remote Supabase Data on Auth Login
   useEffect(() => {
     if (user?.id && isSupabaseConfigured) {
       fetchSupabaseData(user.id).then((remote) => {
@@ -216,17 +216,14 @@ export default function App() {
           if (remote.reservations && remote.reservations.length > 0) setReservations(remote.reservations);
           
           if (remote.settings) {
-            console.log('[App] Settings do Supabase recebidos:', remote.settings);
             setSettings((prev) => {
               const merged = { ...prev };
               Object.keys(remote.settings).forEach((key) => {
                 const remoteVal = remote.settings[key];
-                // Only override if Supabase has a real saved value (not null)
                 if (remoteVal !== null && remoteVal !== undefined) {
                   merged[key] = remoteVal;
                 }
               });
-              console.log('[App] Settings finais após merge:', merged);
               return merged;
             });
           }
@@ -234,6 +231,15 @@ export default function App() {
       });
     }
   }, [user?.id]);
+
+  // Sync all local items to Supabase when logged in so visitors can see them
+  useEffect(() => {
+    if (user?.id && isSupabaseConfigured && items.length > 0) {
+      items.forEach(async (item) => {
+        saveSupabaseItem(item, user.id);
+      });
+    }
+  }, [user?.id, items.length]);
 
   // Apply Store Custom Theme, Colors, Document Title & Favicon
   useEffect(() => {

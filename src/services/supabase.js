@@ -208,16 +208,19 @@ export const fetchPublicStoreBySlug = async (slug) => {
   return null;
 };
 
-// Fetch public store items, customers and reservations by store owner user_id
 export const fetchPublicStoreItems = async (storeUserId) => {
   if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
 
   try {
+    console.log('[Supabase] Buscando itens/reservas públicos para o user_id:', storeUserId);
     const [itemsRes, custRes, resRes] = await Promise.all([
       supabase.from('items').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
       supabase.from('customers').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
       supabase.from('reservations').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
     ]);
+
+    if (itemsRes.error) console.error('[Supabase] Erro ao buscar items:', itemsRes.error);
+    console.log('[Supabase] Items retornados para o público:', itemsRes.data?.length || 0, itemsRes.data);
 
     const items = (itemsRes.data || []).map(i => ({
       id: i.id,
