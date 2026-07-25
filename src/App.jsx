@@ -88,50 +88,28 @@ export default function App() {
     });
   };
 
-  // Helper to extract store name from URL path slug (e.g. /loja/gabriel-minis -> Gabriel Minis)
-  const getInitialStoreNameFromUrl = () => {
-    try {
-      const pathname = window.location.pathname;
-      if (pathname.includes('/loja/')) {
-        const slug = pathname.split('/loja/')[1]?.replace(/\/$/, '').trim();
-        if (slug) {
-          return slug
-            .split('-')
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' ');
-        }
-      }
-    } catch {}
-    return null;
-  };
-
   // Persistent Data States
   const [items, setItems] = useState(() => loadState(STORAGE_KEYS.ITEMS, INITIAL_ITEMS));
   const [customers, setCustomers] = useState(() => loadState(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
-  const [settings, setSettings] = useState(() => {
-    const loaded = loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
-    const urlStoreName = getInitialStoreNameFromUrl();
-    if (urlStoreName) {
-      return { ...loaded, storeName: urlStoreName };
-    }
-    return loaded;
-  });
+  const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
 
   // Check if URL has a store slug (e.g., /loja/gabriel-minis) when visiting unauthenticated
   useEffect(() => {
-    const pathname = window.location.pathname;
-    if (pathname.startsWith('/loja/')) {
-      const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
-      if (slug) {
-        fetchPublicStoreBySlug(slug).then((publicSettings) => {
-          if (publicSettings) {
-            setSettings((prev) => ({ ...prev, ...publicSettings }));
-          }
-        });
+    if (!user) {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/loja/')) {
+        const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+        if (slug) {
+          fetchPublicStoreBySlug(slug).then((publicSettings) => {
+            if (publicSettings) {
+              setSettings((prev) => ({ ...prev, ...publicSettings }));
+            }
+          });
+        }
       }
     }
-  }, []);
+  }, [user]);
 
   // Derive Store Slug for Multi-Store URL Routing
   const storeSlug = (settings?.storeName || 'minha-loja')
@@ -146,7 +124,7 @@ export default function App() {
     if (user && storeSlug) {
       const currentPath = window.location.pathname;
       const targetPath = `/loja/${storeSlug}`;
-      if (!currentPath.startsWith(`/loja/`)) {
+      if (currentPath !== targetPath) {
         window.history.replaceState(null, '', targetPath);
       }
     }
@@ -165,7 +143,7 @@ export default function App() {
             setSettings((prev) => {
               const merged = { ...prev };
               Object.keys(remote.settings).forEach((key) => {
-                if (remote.settings[key]) {
+                if (remote.settings[key] !== undefined && remote.settings[key] !== null && remote.settings[key] !== '') {
                   merged[key] = remote.settings[key];
                 }
               });
@@ -228,6 +206,7 @@ export default function App() {
   const handleLogout = async () => {
     await signOutUser();
     setUser(null);
+    window.history.replaceState(null, '', '/');
   };
 
   // Handlers: Items
@@ -340,6 +319,7 @@ export default function App() {
   // Handlers: Settings
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
+    saveState(STORAGE_KEYS.SETTINGS, newSettings);
     if (user?.id && isSupabaseConfigured) {
       saveSupabaseSettings(newSettings, user.id);
     }

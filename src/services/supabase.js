@@ -142,8 +142,8 @@ export const fetchSupabaseData = async (userId) => {
     }));
 
     const settings = settingsRes.data ? {
-      storeName: settingsRes.data.store_name,
-      pixKey: settingsRes.data.pix_key,
+      storeName: settingsRes.data.store_name || '',
+      pixKey: settingsRes.data.pix_key || '',
       primaryColor: settingsRes.data.primary_color || '#38bdf8',
       secondaryColor: settingsRes.data.secondary_color || '#a855f7',
       themeMode: settingsRes.data.theme_mode || 'dark',
@@ -351,21 +351,12 @@ export const saveSupabaseSettings = async (settings, userId) => {
       favicon_url: settings.faviconUrl || '',
     };
 
-    const { data: existing } = await supabase
+    const { error } = await supabase
       .from('store_settings')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .upsert(payload, { onConflict: 'user_id' });
 
-    if (existing && existing.id) {
-      await supabase
-        .from('store_settings')
-        .update(payload)
-        .eq('user_id', userId);
-    } else {
-      await supabase
-        .from('store_settings')
-        .insert([payload]);
+    if (error) {
+      console.error('Erro ao salvar store_settings no Supabase:', error);
     }
   } catch (err) {
     console.error('Erro ao salvar store_settings no Supabase:', err);
