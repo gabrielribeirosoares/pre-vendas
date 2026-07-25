@@ -68,6 +68,8 @@ export default function App() {
           setUser(session.user);
         }
         setAuthLoading(false);
+      }).catch(() => {
+        setAuthLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -79,11 +81,20 @@ export default function App() {
         setAuthLoading(false);
       });
 
-      return () => subscription.unsubscribe();
     } else {
       setAuthLoading(false);
     }
   }, []);
+
+  // Auto-fix non-UUID user ID in local storage to prevent Supabase 400 errors
+  useEffect(() => {
+    if (user && user.id && !isValidUUID(user.id)) {
+      console.log('[Auth] Migrando ID do usuário local para UUID válido:', user.id);
+      const fixedUser = { ...user, id: generateUUID() };
+      setUser(fixedUser);
+      localStorage.setItem('diecast_demo_user', JSON.stringify(fixedUser));
+    }
+  }, [user]);
 
   // Navigation State
   const [currentTab, setCurrentTab] = useState('dashboard');

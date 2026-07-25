@@ -320,7 +320,7 @@ export const fetchCustomerStores = async (phoneOrEmail) => {
 };
 
 export const saveSupabaseItem = async (item, userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return item;
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return item;
   const payload = {
     user_id: userId,
     brand_id: item.brandId || 'mini_gt',
@@ -338,11 +338,12 @@ export const saveSupabaseItem = async (item, userId) => {
   };
 
   // Include id if valid UUID (not demo string id)
-  if (item.id && !item.id.startsWith('item-')) {
+  if (isValidUUID(item.id)) {
     payload.id = item.id;
   }
 
-  const { data } = await supabase.from('items').upsert(payload).select();
+  const { data, error } = await supabase.from('items').upsert(payload).select();
+  if (error) console.error('[Supabase] Erro ao salvar item:', error);
   if (data && data[0]) {
     return {
       ...item,
@@ -355,14 +356,16 @@ export const saveSupabaseItem = async (item, userId) => {
 export const deleteSupabaseItem = async (itemId) => {
   if (!isSupabaseConfigured || !supabase || !itemId) return;
   try {
-    await supabase.from('items').delete().eq('id', itemId);
+    if (isValidUUID(itemId)) {
+      await supabase.from('items').delete().eq('id', itemId);
+    }
   } catch (err) {
     console.error('[Supabase] Erro ao excluir item:', err);
   }
 };
 
 export const saveSupabaseCustomer = async (cust, userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return cust;
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return cust;
   const payload = {
     user_id: userId,
     name: cust.name || '',
@@ -375,7 +378,8 @@ export const saveSupabaseCustomer = async (cust, userId) => {
     payload.id = cust.id;
   }
 
-  const { data } = await supabase.from('customers').upsert(payload).select();
+  const { data, error } = await supabase.from('customers').upsert(payload).select();
+  if (error) console.error('[Supabase] Erro ao salvar cliente:', error);
   if (data && data[0]) {
     return {
       ...cust,
@@ -388,14 +392,16 @@ export const saveSupabaseCustomer = async (cust, userId) => {
 export const deleteSupabaseCustomer = async (custId) => {
   if (!isSupabaseConfigured || !supabase || !custId) return;
   try {
-    await supabase.from('customers').delete().eq('id', custId);
+    if (isValidUUID(custId)) {
+      await supabase.from('customers').delete().eq('id', custId);
+    }
   } catch (err) {
     console.error('[Supabase] Erro ao excluir cliente:', err);
   }
 };
 
 export const saveSupabaseReservation = async (res, userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return res;
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return res;
   const payload = {
     user_id: userId,
     customer_id: isValidUUID(res.customerId) ? res.customerId : null,
@@ -411,7 +417,8 @@ export const saveSupabaseReservation = async (res, userId) => {
     payload.id = res.id;
   }
 
-  const { data } = await supabase.from('reservations').upsert(payload).select();
+  const { data, error } = await supabase.from('reservations').upsert(payload).select();
+  if (error) console.error('[Supabase] Erro ao salvar reserva:', error);
   if (data && data[0]) {
     return {
       ...res,
