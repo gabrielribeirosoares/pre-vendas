@@ -640,49 +640,6 @@ export const CustomerPortalView = ({
                 <strong style={{ color: 'var(--text-primary)' }}>Dica:</strong> Use o mesmo número de WhatsApp cadastrado na loja para que suas reservas apareçam automaticamente.
               </div>
             </div>
-
-            {/* Create Store CTA */}
-            <div style={{
-              maxWidth: '440px',
-              width: '100%',
-              textAlign: 'center',
-              padding: '20px 24px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.06), rgba(168, 85, 247, 0.06))',
-              border: '1px dashed var(--border-color)',
-            }}>
-              <Store size={22} color="var(--accent-purple)" style={{ marginBottom: '8px' }} />
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-                Também vende miniaturas diecast?
-              </p>
-              <a
-                href="/"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: 'var(--accent-cyan)',
-                  textDecoration: 'none',
-                  padding: '8px 20px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(56, 189, 248, 0.1)',
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.18)';
-                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.25)';
-                }}
-              >
-                <ArrowRight size={16} /> Crie sua loja gratuitamente
-              </a>
-            </div>
           </div>
         )}
 
@@ -774,9 +731,31 @@ export const CustomerPortalView = ({
                 </div>
               </div>
 
-              <button onClick={handleContactStore} className="btn btn-whatsapp" style={{ padding: '8px 14px', fontSize: '0.8125rem', gap: '6px' }}>
-                <MessageCircle size={16} /> Falar com a Loja
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <a
+                  href="/"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    color: 'var(--accent-cyan)',
+                    textDecoration: 'none',
+                    padding: '8px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Store size={14} /> Crie sua própria loja
+                </a>
+
+                <button onClick={handleContactStore} className="btn btn-whatsapp" style={{ padding: '8px 14px', fontSize: '0.8125rem', gap: '6px' }}>
+                  <MessageCircle size={16} /> Falar com a Loja
+                </button>
+              </div>
             </div>
 
             {/* Portal Tabs */}

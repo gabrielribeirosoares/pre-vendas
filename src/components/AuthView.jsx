@@ -109,41 +109,25 @@ export const AuthView = ({ onAuthSuccess, settings }) => {
       }}>
         {/* Logo & Brand Header */}
         <div style={{ textTransform: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {settings?.logoUrl ? (
-            <img
-              src={settings.logoUrl}
-              alt="Logo da Loja"
-              style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '16px',
-                objectFit: 'cover',
-                border: '1px solid var(--border-color)',
-                marginBottom: '12px',
-                boxShadow: '0 6px 20px rgba(56, 189, 248, 0.3)',
-              }}
-            />
-          ) : (
-            <div style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-purple))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)',
-              marginBottom: '12px',
-            }}>
-              <Flame size={32} color="#ffffff" />
-            </div>
-          )}
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, var(--accent-orange), var(--accent-purple))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 6px 24px rgba(249, 115, 22, 0.4)',
+            marginBottom: '12px',
+          }}>
+            <Flame size={34} color="#ffffff" />
+          </div>
 
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.15 }}>
-            {settings?.storeName ? settings.storeName.toUpperCase() : 'DIECAST PRE-ORDER'}
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            Diecast Pré-Vendas
           </h1>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Sistema de Gestão de Pré-Vendas de Miniaturas
+            Plataforma de Gestão de Pré-Vendas de Miniaturas
           </p>
         </div>
 
