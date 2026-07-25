@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Image as ImageIcon } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Upload } from 'lucide-react';
 import { BRANDS, ITEM_STATUSES } from '../data/initialData';
+import { compressImageFile } from '../utils/helpers';
 
 export const ModalItemForm = ({ isOpen, onClose, onSave, itemToEdit }) => {
   const [formData, setFormData] = useState({
@@ -70,7 +71,7 @@ export const ModalItemForm = ({ isOpen, onClose, onSave, itemToEdit }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             {itemToEdit ? 'Editar Modelo Miniatura' : 'Cadastrar Novo Modelo em Pré-Venda'}
           </h3>
           <button onClick={onClose} className="btn btn-icon">
@@ -199,16 +200,54 @@ export const ModalItemForm = ({ isOpen, onClose, onSave, itemToEdit }) => {
               />
             </div>
 
-            {/* URL da Imagem */}
+            {/* Upload & URL da Imagem */}
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">URL da Imagem / Foto do Protótipo</label>
-              <input
-                type="text"
-                placeholder="Ex: /images/minigt_r34.png ou link HTTPS"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="input-field"
-              />
+              <label className="form-label">Foto / Imagem do Modelo</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Link HTTP ou digite a URL da imagem..."
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className="input-field"
+                  style={{ flex: 1 }}
+                />
+
+                <label
+                  className="btn btn-secondary"
+                  style={{ cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 14px', height: '44px', gap: '6px' }}
+                >
+                  <Upload size={16} />
+                  Enviar Foto
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const base64 = await compressImageFile(file);
+                          setFormData((prev) => ({ ...prev, imageUrl: base64 }));
+                        } catch (err) {
+                          alert('Erro ao carregar a foto.');
+                        }
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              {formData.imageUrl && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                  <img
+                    src={formData.imageUrl}
+                    alt="Preview"
+                    style={{ width: '42px', height: '42px', borderRadius: '6px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pré-visualização da Imagem</span>
+                </div>
+              )}
             </div>
 
             {/* Descrição */}

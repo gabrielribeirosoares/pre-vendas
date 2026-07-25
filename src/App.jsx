@@ -13,6 +13,8 @@ import { ModalItemForm } from './components/ModalItemForm';
 import { ModalReservationForm } from './components/ModalReservationForm';
 import { ModalCustomerForm } from './components/ModalCustomerForm';
 import { ModalWhatsApp } from './components/ModalWhatsApp';
+import { PublicStorefrontView } from './components/PublicStorefrontView';
+import { CustomerPortalView } from './components/CustomerPortalView';
 
 import {
   INITIAL_ITEMS,
@@ -22,7 +24,20 @@ import {
 } from './data/initialData';
 
 import { loadState, saveState, STORAGE_KEYS } from './utils/helpers';
-import { supabase, isSupabaseConfigured, signOutUser } from './services/supabase';
+import {
+  supabase,
+  isSupabaseConfigured,
+  signOutUser,
+  fetchSupabaseData,
+  fetchPublicStoreBySlug,
+  saveSupabaseSettings,
+  saveSupabaseItem,
+  deleteSupabaseItem,
+  saveSupabaseCustomer,
+  deleteSupabaseCustomer,
+  saveSupabaseReservation,
+  deleteSupabaseReservation,
+} from './services/supabase';
 
 export default function App() {
   // Auth State
@@ -61,12 +76,133 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('diecast_sidebar_collapsed') === 'true';
+  });
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('diecast_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
+
+  // Helper to extract store name from URL path slug (e.g. /loja/gabriel-minis -> Gabriel Minis)
+  const getInitialStoreNameFromUrl = () => {
+    try {
+      const pathname = window.location.pathname;
+      if (pathname.includes('/loja/')) {
+        const slug = pathname.split('/loja/')[1]?.replace(/\/$/, '').trim();
+        if (slug) {
+          return slug
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        }
+      }
+    } catch {}
+    return null;
+  };
 
   // Persistent Data States
   const [items, setItems] = useState(() => loadState(STORAGE_KEYS.ITEMS, INITIAL_ITEMS));
   const [customers, setCustomers] = useState(() => loadState(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
-  const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
+  const [settings, setSettings] = useState(() => {
+    const loaded = loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    const urlStoreName = getInitialStoreNameFromUrl();
+    if (urlStoreName) {
+      return { ...loaded, storeName: urlStoreName };
+    }
+    return loaded;
+  });
+
+  // Check if URL has a store slug (e.g., /loja/gabriel-minis) when visiting unauthenticated
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/loja/')) {
+      const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+      if (slug) {
+        fetchPublicStoreBySlug(slug).then((publicSettings) => {
+          if (publicSettings) {
+            setSettings((prev) => ({ ...prev, ...publicSettings }));
+          }
+        });
+      }
+    }
+  }, []);
+
+  // Derive Store Slug for Multi-Store URL Routing
+  const storeSlug = (settings?.storeName || 'minha-loja')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // Keep Browser URL updated with store slug (Multi-store URL)
+  useEffect(() => {
+    if (user && storeSlug) {
+      const currentPath = window.location.pathname;
+      const targetPath = `/loja/${storeSlug}`;
+      if (!currentPath.startsWith(`/loja/`)) {
+        window.history.replaceState(null, '', targetPath);
+      }
+    }
+  }, [user, storeSlug]);
+
+  // Load Remote Supabase Data on Auth Login (New accounts start empty)
+  useEffect(() => {
+    if (user?.id && isSupabaseConfigured) {
+      fetchSupabaseData(user.id).then((remote) => {
+        if (remote) {
+          if (remote.items && remote.items.length > 0) setItems(remote.items);
+          if (remote.customers && remote.customers.length > 0) setCustomers(remote.customers);
+          if (remote.reservations && remote.reservations.length > 0) setReservations(remote.reservations);
+          
+          if (remote.settings && Object.keys(remote.settings).length > 0) {
+            setSettings((prev) => {
+              const merged = { ...prev };
+              Object.keys(remote.settings).forEach((key) => {
+                if (remote.settings[key]) {
+                  merged[key] = remote.settings[key];
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      });
+    }
+  }, [user?.id]);
+
+  // Apply Store Custom Theme, Colors, Document Title & Favicon
+  useEffect(() => {
+    const mode = settings?.themeMode || 'dark';
+    document.documentElement.setAttribute('data-theme', mode);
+
+    if (settings?.primaryColor) {
+      document.documentElement.style.setProperty('--accent-cyan', settings.primaryColor);
+      document.documentElement.style.setProperty('--border-glow', `${settings.primaryColor}4d`);
+    }
+    if (settings?.secondaryColor) {
+      document.documentElement.style.setProperty('--accent-purple', settings.secondaryColor);
+    }
+    if (settings?.storeName) {
+      document.title = `${settings.storeName} - Pré-Vendas`;
+    }
+    const activeFavicon = settings?.faviconUrl || settings?.logoUrl;
+    if (activeFavicon) {
+      let link = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = activeFavicon;
+    }
+  }, [settings]);
 
   // Sync to LocalStorage
   useEffect(() => { saveState(STORAGE_KEYS.ITEMS, items); }, [items]);
@@ -95,61 +231,126 @@ export default function App() {
   };
 
   // Handlers: Items
-  const handleSaveItem = (itemData) => {
-    if (itemToEdit) {
-      setItems(items.map((i) => (i.id === itemData.id ? itemData : i)));
-    } else {
-      setItems([...items, itemData]);
+  const handleSaveItem = async (itemData) => {
+    let itemToSave = itemData;
+    if (user?.id && isSupabaseConfigured) {
+      const saved = await saveSupabaseItem(itemData, user.id);
+      if (saved && saved.id) {
+        itemToSave = saved;
+      }
     }
+
+    setItems((prevItems) => {
+      const exists = prevItems.some((i) => i.id === itemToSave.id || (itemData.id && i.id === itemData.id));
+      if (exists) {
+        return prevItems.map((i) => (i.id === itemToSave.id || i.id === itemData.id ? itemToSave : i));
+      }
+      return [...prevItems, itemToSave];
+    });
+
     setItemToEdit(null);
   };
 
   const handleDeleteItem = (itemId) => {
     if (window.confirm('Tem certeza que deseja excluir este modelo? Reservas vinculadas continuarão registradas.')) {
-      setItems(items.filter((i) => i.id !== itemId));
+      setItems((prevItems) => prevItems.filter((i) => i.id !== itemId));
+      if (user?.id && isSupabaseConfigured) {
+        deleteSupabaseItem(itemId);
+      }
     }
   };
 
   // Handlers: Reservations
-  const handleSaveReservation = (resData) => {
-    if (reservationToEdit) {
-      setReservations(reservations.map((r) => (r.id === resData.id ? resData : r)));
-    } else {
-      setReservations([...reservations, resData]);
+  const handleSaveReservation = async (resData) => {
+    let resToSave = resData;
+    if (user?.id && isSupabaseConfigured) {
+      const saved = await saveSupabaseReservation(resData, user.id);
+      if (saved && saved.id) {
+        resToSave = saved;
+      }
+    }
+
+    setReservations((prevRes) => {
+      const exists = prevRes.some((r) => r.id === resToSave.id || (resData.id && r.id === resData.id));
+      if (exists) {
+        return prevRes.map((r) => (r.id === resToSave.id || r.id === resData.id ? resToSave : r));
+      }
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.7 },
       });
-    }
+      return [...prevRes, resToSave];
+    });
+
     setReservationToEdit(null);
     setPreselectedItem(null);
   };
 
   const handleDeleteReservation = (resId) => {
     if (window.confirm('Tem certeza que deseja excluir esta reserva?')) {
-      setReservations(reservations.filter((r) => r.id !== resId));
+      setReservations((prevRes) => prevRes.filter((r) => r.id !== resId));
+      if (user?.id && isSupabaseConfigured) {
+        deleteSupabaseReservation(resId);
+      }
     }
   };
 
   const handleUpdateReservationStatus = (resId, newStatus) => {
-    setReservations(reservations.map((r) => (r.id === resId ? { ...r, status: newStatus } : r)));
+    setReservations((prevRes) => {
+      const updated = prevRes.map((r) => (r.id === resId ? { ...r, status: newStatus } : r));
+      const target = updated.find((r) => r.id === resId);
+      if (target && user?.id && isSupabaseConfigured) {
+        saveSupabaseReservation(target, user.id);
+      }
+      return updated;
+    });
   };
 
   // Handlers: Customers
-  const handleSaveCustomer = (custData) => {
-    if (customerToEdit) {
-      setCustomers(customers.map((c) => (c.id === custData.id ? custData : c)));
-    } else {
-      setCustomers([...customers, custData]);
+  const handleSaveCustomer = async (custData) => {
+    let custToSave = custData;
+    if (user?.id && isSupabaseConfigured) {
+      const saved = await saveSupabaseCustomer(custData, user.id);
+      if (saved && saved.id) {
+        custToSave = saved;
+      }
     }
+
+    setCustomers((prevCust) => {
+      const exists = prevCust.some((c) => c.id === custToSave.id || (custData.id && c.id === custData.id));
+      if (exists) {
+        return prevCust.map((c) => (c.id === custToSave.id || c.id === custData.id ? custToSave : c));
+      }
+      return [...prevCust, custToSave];
+    });
+
     setCustomerToEdit(null);
   };
 
   const handleDeleteCustomer = (custId) => {
     if (window.confirm('Tem certeza que deseja excluir este colecionador?')) {
       setCustomers(customers.filter((c) => c.id !== custId));
+      if (user?.id && isSupabaseConfigured) {
+        deleteSupabaseCustomer(custId);
+      }
     }
+  };
+
+  // Handlers: Settings
+  const handleSaveSettings = (newSettings) => {
+    setSettings(newSettings);
+    if (user?.id && isSupabaseConfigured) {
+      saveSupabaseSettings(newSettings, user.id);
+    }
+  };
+
+  const handleToggleTheme = () => {
+    const newMode = settings?.themeMode === 'light' ? 'dark' : 'light';
+    handleSaveSettings({
+      ...settings,
+      themeMode: newMode,
+    });
   };
 
   // Handlers: WhatsApp Modal Trigger
@@ -174,7 +375,7 @@ export default function App() {
     if (parsed.items && Array.isArray(parsed.items)) setItems(parsed.items);
     if (parsed.customers && Array.isArray(parsed.customers)) setCustomers(parsed.customers);
     if (parsed.reservations && Array.isArray(parsed.reservations)) setReservations(parsed.reservations);
-    if (parsed.settings) setSettings(parsed.settings);
+    if (parsed.settings) handleSaveSettings(parsed.settings);
     alert('Dados de backup restaurados com sucesso!');
   };
 
@@ -182,7 +383,7 @@ export default function App() {
     setItems(INITIAL_ITEMS);
     setCustomers(INITIAL_CUSTOMERS);
     setReservations(INITIAL_RESERVATIONS);
-    setSettings(INITIAL_SETTINGS);
+    handleSaveSettings(INITIAL_SETTINGS);
   };
 
   // Render Loading Spinner during auth check
@@ -202,9 +403,50 @@ export default function App() {
     );
   }
 
-  // Render Auth Screen if not logged in
+  // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) and not logged in as Admin
+  const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
+
+  if (!user && isVisitingPublicStore) {
+    return (
+      <CustomerPortalView
+        items={items}
+        reservations={reservations}
+        customers={customers}
+        settings={settings}
+        onBackToStorefront={() => setCurrentTab('storefront')}
+      />
+    );
+  }
+
+  // Render Admin Auth Screen if not logged in
   if (!user) {
-    return <AuthView onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
+    return <AuthView settings={settings} onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
+  }
+
+  // Render Public Storefront View if active
+  if (currentTab === 'storefront') {
+    return (
+      <PublicStorefrontView
+        items={items}
+        settings={settings}
+        onBackToAdmin={() => setCurrentTab('dashboard')}
+        onOpenCustomerPortal={() => setCurrentTab('customer_portal')}
+      />
+    );
+  }
+
+  // Render Customer Portal View if active
+  if (currentTab === 'customer_portal') {
+    return (
+      <CustomerPortalView
+        items={items}
+        reservations={reservations}
+        customers={customers}
+        settings={settings}
+        onBackToStorefront={() => setCurrentTab('storefront')}
+        onBackToAdmin={() => setCurrentTab('dashboard')}
+      />
+    );
   }
 
   // Render Main Application when logged in
@@ -221,6 +463,9 @@ export default function App() {
         }}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebarCollapse}
+        settings={settings}
       />
 
       {/* Main Content Wrapper */}
@@ -229,8 +474,13 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onToggleMobileMenu={() => setIsMobileOpen(!isMobileOpen)}
+          onToggleSidebarCollapse={handleToggleSidebarCollapse}
+          onOpenStorefront={() => setCurrentTab('storefront')}
+          onOpenCustomerPortal={() => setCurrentTab('customer_portal')}
           user={user}
           onLogout={handleLogout}
+          settings={settings}
+          onToggleTheme={handleToggleTheme}
           onNewItem={() => {
             setItemToEdit(null);
             setIsItemModalOpen(true);
@@ -261,6 +511,8 @@ export default function App() {
             <CatalogView
               items={items}
               reservations={reservations}
+              customers={customers}
+              settings={settings}
               searchQuery={searchQuery}
               onNewItem={() => {
                 setItemToEdit(null);
@@ -284,6 +536,7 @@ export default function App() {
               reservations={reservations}
               items={items}
               customers={customers}
+              settings={settings}
               searchQuery={searchQuery}
               onNewReservation={() => {
                 setReservationToEdit(null);
@@ -304,6 +557,7 @@ export default function App() {
             <SupplierOrdersView
               items={items}
               reservations={reservations}
+              onSaveItem={handleSaveItem}
             />
           )}
 
@@ -326,7 +580,7 @@ export default function App() {
           {currentTab === 'settings' && (
             <SettingsBackupView
               settings={settings}
-              onSaveSettings={setSettings}
+              onSaveSettings={handleSaveSettings}
               onExportData={handleExportData}
               onImportData={handleImportData}
               onResetDemoData={handleResetDemoData}

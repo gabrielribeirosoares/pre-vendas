@@ -173,4 +173,9 @@ export const INITIAL_SETTINGS = {
   storeName: 'Miniatures Pre-Orders Club',
   pixKey: 'pix@miniaturasprevendas.com.br',
   defaultWhatsAppPrefix: 'Olá! Sou da loja de miniaturas.',
+  primaryColor: '#38bdf8',
+  secondaryColor: '#a855f7',
+  themeMode: 'dark',
+  logoUrl: '',
+  faviconUrl: '',
 };

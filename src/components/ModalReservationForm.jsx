@@ -102,7 +102,7 @@ export const ModalReservationForm = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             {reservationToEdit ? 'Editar Reserva de Cliente' : 'Nova Reserva de Pré-Venda'}
           </h3>
           <button onClick={onClose} className="btn btn-icon">
@@ -196,6 +196,18 @@ export const ModalReservationForm = ({
                 onChange={(e) => setFormData({ ...formData, depositPaid: e.target.value })}
                 className="input-field"
                 required
+              />
+            </div>
+
+            {/* Código de Rastreamento */}
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Código de Rastreamento (Correios / Envio)</label>
+              <input
+                type="text"
+                placeholder="Ex: AA123456789BR ou NL987654321BR"
+                value={formData.trackingCode || ''}
+                onChange={(e) => setFormData({ ...formData, trackingCode: e.target.value.toUpperCase() })}
+                className="input-field"
               />
             </div>
 

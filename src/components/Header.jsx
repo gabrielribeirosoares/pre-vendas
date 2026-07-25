@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Search, Car, UserPlus, Menu, LogOut, User as UserIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Search, Car, UserPlus, Menu, LogOut, Sun, Moon, Share2, Check, ChevronDown, LayoutDashboard, Store } from 'lucide-react';
 
 export const Header = ({
   onNewItem,
@@ -8,19 +8,39 @@ export const Header = ({
   searchQuery,
   setSearchQuery,
   onToggleMobileMenu,
+  onToggleSidebarCollapse,
   user,
   onLogout,
+  settings,
+  onToggleTheme,
 }) => {
+  const [copiedLink, setCopiedLink] = useState(false);
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
-  const storeDisplayName = user?.user_metadata?.store_name || 'Minha Loja';
+  const storeDisplayName = settings?.storeName || user?.user_metadata?.store_name || 'Minha Loja';
+  const isLight = settings?.themeMode === 'light';
+
+  const handleCopyStoreLink = () => {
+    // Copy full store URL with store path
+    const storeUrl = window.location.href;
+    navigator.clipboard.writeText(storeUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleMenuClick = () => {
+    if (window.innerWidth <= 768) {
+      if (onToggleMobileMenu) onToggleMobileMenu();
+    } else {
+      if (onToggleSidebarCollapse) onToggleSidebarCollapse();
+    }
+  };
 
   return (
     <header style={{
-      minHeight: '64px',
-      background: 'rgba(13, 19, 34, 0.9)',
-      backdropFilter: 'blur(12px)',
+      background: 'var(--header-bg)',
+      backdropFilter: 'blur(16px)',
       borderBottom: '1px solid var(--border-color)',
-      padding: '10px 16px',
+      padding: '12px 20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -28,40 +48,41 @@ export const Header = ({
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      flexWrap: 'wrap',
+      flexWrap: 'nowrap',
+      overflowX: 'auto',
     }}>
-      {/* Mobile Toggle & Search Group */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '220px' }}>
-        {/* Hamburger Menu Button (Mobile) */}
+      {/* Mobile Toggle Group */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Hamburger Menu Button (Mobile Only) */}
         <button
           onClick={onToggleMobileMenu}
           className="btn btn-icon mobile-menu-btn"
           title="Abrir Menu"
           aria-label="Abrir Menu"
         >
-          <Menu size={20} />
+          <Menu size={20} color="var(--accent-cyan)" />
         </button>
-
-        {/* Search Input */}
-        <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
-          <Search
-            size={18}
-            color="var(--text-muted)"
-            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
-          />
-          <input
-            type="text"
-            placeholder="Buscar modelo, cliente ou SKU..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field"
-            style={{ paddingLeft: '38px', height: '40px', fontSize: '0.84rem' }}
-          />
-        </div>
       </div>
 
       {/* Action Buttons & User Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap' }}>
+        {/* Copy Store Link Button */}
+        <button
+          onClick={handleCopyStoreLink}
+          className="btn btn-secondary"
+          style={{
+            fontSize: '0.8125rem',
+            padding: '8px 12px',
+            borderColor: copiedLink ? 'rgba(16, 185, 129, 0.4)' : 'rgba(56, 189, 248, 0.3)',
+            color: copiedLink ? 'var(--accent-green)' : 'var(--accent-cyan)',
+            gap: '6px',
+          }}
+          title="Copiar link da vitrine/loja para enviar aos seus clientes"
+        >
+          {copiedLink ? <Check size={16} color="var(--accent-green)" /> : <Share2 size={16} />}
+          <span className="hide-on-xs">{copiedLink ? 'Link Copiado!' : 'Divulgar Loja'}</span>
+        </button>
+
         <button onClick={onNewCustomer} className="btn btn-secondary" style={{ fontSize: '0.8125rem', padding: '8px 12px' }}>
           <UserPlus size={16} />
           <span className="hide-on-xs">+ Cliente</span>
@@ -77,6 +98,18 @@ export const Header = ({
           <span>Nova Reserva</span>
         </button>
 
+        {/* Theme Toggle Button (Light/Dark) */}
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="btn btn-icon"
+          title={isLight ? 'Alternar para Modo Escuro' : 'Alternar para Modo Claro'}
+          aria-label="Alternar Tema"
+          style={{ color: 'var(--accent-cyan)' }}
+        >
+          {isLight ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+
         {/* User Account Dropdown & Logout */}
         <div style={{
           display: 'flex',
@@ -86,10 +119,10 @@ export const Header = ({
           borderLeft: '1px solid var(--border-color)',
         }}>
           <div style={{ textAlign: 'right' }} className="hide-on-xs">
-            <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>
               {userDisplayName}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
               {storeDisplayName}
             </div>
           </div>
@@ -98,7 +131,7 @@ export const Header = ({
             onClick={onLogout}
             className="btn btn-icon"
             title="Sair da Conta"
-            style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+            style={{ color: 'var(--accent-red)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
           >
             <LogOut size={16} />
           </button>
@@ -107,3 +140,5 @@ export const Header = ({
     </header>
   );
 };
+
+

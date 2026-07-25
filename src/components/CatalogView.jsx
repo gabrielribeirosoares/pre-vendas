@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, Car, Calendar, DollarSign, Filter, Layers, MessageCircle, Search } from 'lucide-react';
 import { formatBRL } from '../utils/helpers';
 import { BRANDS, ITEM_STATUSES } from '../data/initialData';
+import { ModalBatchWhatsApp } from './ModalBatchWhatsApp';
 
 export const CatalogView = ({
   items,
   reservations,
-  searchQuery,
+  customers = [],
+  settings,
+  searchQuery: externalSearchQuery,
   onEditItem,
   onDeleteItem,
   onNewReservationForItem,
@@ -14,13 +17,18 @@ export const CatalogView = ({
 }) => {
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [localSearch, setLocalSearch] = useState('');
+  const [batchWhatsAppItem, setBatchWhatsAppItem] = useState(null);
+
+  const activeSearch = localSearch || externalSearchQuery || '';
 
   // Filter Items
   const filteredItems = items.filter((item) => {
     const matchesSearch =
-      !searchQuery ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      !activeSearch ||
+      item.name.toLowerCase().includes(activeSearch.toLowerCase()) ||
+      item.sku.toLowerCase().includes(activeSearch.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(activeSearch.toLowerCase()));
 
     const matchesBrand = selectedBrand === 'all' || item.brandId === selectedBrand;
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
@@ -33,7 +41,7 @@ export const CatalogView = ({
       {/* Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
             Catálogo de Pré-Vendas
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '4px' }}>
@@ -79,6 +87,23 @@ export const CatalogView = ({
             <option key={key} value={key}>{st.label}</option>
           ))}
         </select>
+
+        {/* Search Input inside Section Filter Bar */}
+        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+          <Search
+            size={16}
+            color="var(--text-muted)"
+            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por modelo, fabricante ou SKU..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            className="input-field"
+            style={{ paddingLeft: '36px', height: '38px', fontSize: '0.84rem' }}
+          />
+        </div>
       </div>
 
       {/* Grid of Items */}
@@ -160,7 +185,7 @@ export const CatalogView = ({
                       SKU: <span style={{ color: 'var(--accent-cyan)' }}>{item.sku}</span> • Escala {item.scale || '1:64'}
                     </div>
 
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginTop: '4px', lineHeight: 1.3 }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.3 }}>
                       {item.name}
                     </h3>
 
@@ -183,7 +208,7 @@ export const CatalogView = ({
                   }}>
                     <div>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>PREÇO FINAL</span>
-                      <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#ffffff' }}>
+                      <span style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {formatBRL(item.retailPrice)}
                       </span>
                     </div>
@@ -198,7 +223,7 @@ export const CatalogView = ({
                     <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Calendar size={14} color="var(--accent-orange)" />
-                        Chegada: <strong style={{ color: '#ffffff' }}>{item.releaseQuarter || 'Em breve'}</strong>
+                        Chegada: <strong style={{ color: 'var(--text-primary)' }}>{item.releaseQuarter || 'Em breve'}</strong>
                       </span>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-green)' }}>
                         {totalReservedUnits} reservadas
@@ -207,37 +232,63 @@ export const CatalogView = ({
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <button
                       onClick={() => onNewReservationForItem(item)}
                       className="btn btn-primary"
-                      style={{ flex: 1, padding: '8px 12px', fontSize: '0.8125rem' }}
+                      style={{ width: '100%', padding: '10px 14px', fontSize: '0.84rem' }}
                     >
-                      <Plus size={16} /> + Reserva
+                      <Plus size={16} /> Nova Reserva
                     </button>
 
-                    <button
-                      onClick={() => onEditItem(item)}
-                      className="btn btn-icon"
-                      title="Editar Modelo"
-                    >
-                      <Edit2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {itemReservations.length > 0 && (
+                        <button
+                          onClick={() => setBatchWhatsAppItem(item)}
+                          className="btn btn-whatsapp"
+                          style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem' }}
+                          title="Notificar Chegada aos Colecionadores no WhatsApp"
+                        >
+                          <MessageCircle size={16} /> Notificar ({itemReservations.length})
+                        </button>
+                      )}
 
-                    <button
-                      onClick={() => onDeleteItem(item.id)}
-                      className="btn btn-icon"
-                      title="Excluir Modelo"
-                      style={{ color: '#ef4444' }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                      <button
+                        onClick={() => onEditItem(item)}
+                        className="btn btn-icon"
+                        title="Editar Modelo"
+                        style={{ flex: itemReservations.length > 0 ? '0 0 auto' : 1, padding: '8px 12px' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => onDeleteItem(item.id)}
+                        className="btn btn-icon"
+                        title="Excluir Modelo"
+                        style={{ color: '#ef4444', flex: itemReservations.length > 0 ? '0 0 auto' : 1, padding: '8px 12px' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Batch WhatsApp Modal */}
+      {batchWhatsAppItem && (
+        <ModalBatchWhatsApp
+          isOpen={!!batchWhatsAppItem}
+          onClose={() => setBatchWhatsAppItem(null)}
+          item={batchWhatsAppItem}
+          reservations={reservations}
+          customers={customers}
+          settings={settings}
+        />
       )}
     </div>
   );

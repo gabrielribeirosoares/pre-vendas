@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
     store_name TEXT DEFAULT 'Miniatures Pre-Orders Club',
     pix_key TEXT DEFAULT 'pix@miniaturasprevendas.com.br',
+    primary_color TEXT DEFAULT '#38bdf8',
+    secondary_color TEXT DEFAULT '#a855f7',
+    theme_mode TEXT DEFAULT 'dark',
+    logo_url TEXT,
+    favicon_url TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -62,7 +67,7 @@ ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 
--- POLÍTICAS RLS (Cada usuário acessa somente os seus próprios dados)
+-- POLÍTICAS RLS (Cada usuário acessa somente os seus próprios dados, mas configurações da loja são públicas para os clientes verem a marca)
 CREATE POLICY "Usuários acessam apenas seus próprios itens"
     ON public.items FOR ALL
     USING (auth.uid() = user_id);
@@ -75,6 +80,10 @@ CREATE POLICY "Usuários acessam apenas suas próprias reservas"
     ON public.reservations FOR ALL
     USING (auth.uid() = user_id);
 
-CREATE POLICY "Usuários acessam apenas suas próprias configurações"
+CREATE POLICY "Usuários salvam apenas suas próprias configurações"
     ON public.store_settings FOR ALL
     USING (auth.uid() = user_id);
+
+CREATE POLICY "Configurações da loja são públicas para leitura"
+    ON public.store_settings FOR SELECT
+    USING (true);

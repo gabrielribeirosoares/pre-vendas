@@ -57,7 +57,7 @@ export const DashboardView = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* Page Title */}
       <div>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
           Painel de Controle de Pré-Vendas
         </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginTop: '4px' }}>
@@ -81,7 +81,7 @@ export const DashboardView = ({
               <Car size={22} />
             </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff', marginTop: '12px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '12px' }}>
             {activeItemsCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>modelos</span>
           </div>
           <div style={{ fontSize: '0.8125rem', color: 'var(--accent-cyan)', marginTop: '6px', fontWeight: 500 }}>
@@ -99,7 +99,7 @@ export const DashboardView = ({
               <TrendingUp size={22} />
             </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff', marginTop: '12px' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '12px' }}>
             {formatBRL(totalExpectedRevenue)}
           </div>
           <div style={{ fontSize: '0.8125rem', color: 'var(--accent-purple)', marginTop: '6px', fontWeight: 500 }}>
@@ -153,7 +153,7 @@ export const DashboardView = ({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
             <AlertCircle size={20} color="var(--accent-orange)" />
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Lotes em Trânsito / Chegada Iminente ({itemsInTransit.length})
             </h3>
           </div>
@@ -204,7 +204,7 @@ export const DashboardView = ({
         {/* Brand Summary */}
         <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Distribuição por Marca
             </h3>
             <button onClick={() => onNavigate('catalog')} className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
@@ -243,7 +243,7 @@ export const DashboardView = ({
         {/* Recent Client Reservations */}
         <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Últimas Reservas Registradas
             </h3>
             <button onClick={() => onNavigate('reservations')} className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
@@ -274,7 +274,7 @@ export const DashboardView = ({
                     gap: '12px',
                   }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#ffffff' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                         {customer?.name || 'Cliente'}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -283,7 +283,7 @@ export const DashboardView = ({
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ffffff' }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {formatBRL(res.totalPrice)}
                       </div>
                       <span className="badge" style={{ color: resStatus.color, backgroundColor: resStatus.bg, marginTop: '2px' }}>
