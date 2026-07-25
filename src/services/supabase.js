@@ -408,18 +408,55 @@ export const saveSupabaseReservation = async (res, userId) => {
   return res;
 };
 
-export const deleteSupabaseReservation = async (resId) => {
+// BroadcastChannel for instant same-device multi-tab/window synchronization
+const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('diecast_store_sync') : null;
+
+export const broadcastStoreChange = (storeUserId) => {
+  if (syncChannel && storeUserId) {
+    try {
+      syncChannel.postMessage({ type: 'STORE_UPDATED', storeUserId, timestamp: Date.now() });
+    } catch (e) {
+      console.warn('[Sync] Aviso ao emitir transmissão local:', e);
+    }
+  }
+};
+
+export const deleteSupabaseReservation = async (resId, userId) => {
   if (!isSupabaseConfigured || !supabase || !resId) return;
   try {
-    console.log('[Supabase] Excluindo reserva:', resId);
+    console.log('[Supabase] Excluindo reserva:', resId, 'user_id:', userId);
+    let deletedCount = 0;
+
     if (isValidUUID(resId)) {
-      const { error } = await supabase.from('reservations').delete().eq('id', resId);
-      if (error) console.error('[Supabase] Erro ao excluir reserva por UUID:', error);
-      else console.log('[Supabase] Reserva excluída com sucesso do banco:', resId);
+      const { data, error } = await supabase
+        .from('reservations')
+        .delete()
+        .eq('id', resId)
+        .select();
+
+      if (error) {
+        console.error('[Supabase] Erro ao excluir reserva por UUID:', error);
+      } else {
+        deletedCount = data?.length || 0;
+        console.log('[Supabase] Linhas excluídas do banco por UUID:', deletedCount);
+      }
     } else {
-      console.warn('[Supabase] ID de reserva local (não UUID), limpando do banco via filtro:', resId);
-      const { error } = await supabase.from('reservations').delete().ilike('notes', `%${resId}%`);
-      if (error) console.error('[Supabase] Erro ao excluir reserva local:', error);
+      console.warn('[Supabase] Excluindo reserva local por notas:', resId);
+      const { data, error } = await supabase
+        .from('reservations')
+        .delete()
+        .ilike('notes', `%${resId}%`)
+        .select();
+
+      if (error) {
+        console.error('[Supabase] Erro ao excluir reserva local:', error);
+      } else {
+        deletedCount = data?.length || 0;
+      }
+    }
+
+    if (userId) {
+      broadcastStoreChange(userId);
     }
   } catch (err) {
     console.error('[Supabase] Erro ao excluir reserva:', err);
@@ -569,6 +606,7 @@ export const savePublicReservation = async (reservation, storeUserId) => {
 
     if (data && data[0]) {
       console.log('[Supabase] Reserva pública criada:', data[0].id);
+      broadcastStoreChange(storeUserId);
       return {
         id: data[0].id,
         customerId: data[0].customer_id,

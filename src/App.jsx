@@ -147,12 +147,12 @@ export default function App() {
     }
   }, [user]);
 
-  // Real-time synchronization for store owner & public visitors via Supabase WebSockets
+  // Real-time synchronization for store owner & public visitors via Supabase WebSockets & BroadcastChannel
   useEffect(() => {
     const activeStoreUserId = user?.id || publicStoreUserId;
     if (activeStoreUserId && isSupabaseConfigured) {
       const refreshStoreData = () => {
-        console.log('[Supabase Realtime] Atualizando dados em tempo real para:', activeStoreUserId);
+        console.log('[Realtime Sync] Atualizando dados em tempo real para:', activeStoreUserId);
         fetchPublicStoreItems(activeStoreUserId).then((storeData) => {
           if (storeData) {
             setPublicStoreData(storeData);
@@ -163,11 +163,23 @@ export default function App() {
         });
       };
 
-      // Subscribe to Supabase Realtime WebSocket channel
+      // 1. Same-device multi-window instant sync
+      const localSync = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('diecast_store_sync') : null;
+      if (localSync) {
+        localSync.onmessage = (e) => {
+          if (e.data?.storeUserId === activeStoreUserId) {
+            console.log('[Local Sync] Recebido sinal de atualização local');
+            refreshStoreData();
+          }
+        };
+      }
+
+      // 2. Supabase Realtime WebSocket channel for cross-device sync
       const unsubscribe = subscribeToPublicStore(activeStoreUserId, refreshStoreData);
 
       return () => {
-        unsubscribe();
+        if (localSync) localSync.close();
+        if (unsubscribe) unsubscribe();
       };
     }
   }, [user?.id, publicStoreUserId]);
@@ -356,21 +368,51 @@ export default function App() {
     setPreselectedItem(null);
   };
 
-  const handleDeleteReservation = (resId) => {
+  const handleDeleteReservation = async (resId) => {
     if (window.confirm('Tem certeza que deseja excluir esta reserva?')) {
+      const activeStoreUserId = user?.id || publicStoreUserId;
       setReservations((prevRes) => prevRes.filter((r) => r.id !== resId));
-      if (user?.id && isSupabaseConfigured) {
-        deleteSupabaseReservation(resId);
+      if (isSupabaseConfigured) {
+        await deleteSupabaseReservation(resId, activeStoreUserId);
       }
     }
   };
 
   const handleUpdateReservationStatus = (resId, newStatus) => {
     setReservations((prevRes) => {
-      const updated = prevRes.map((r) => (r.id === resId ? { ...r, status: newStatus } : r));
+      const updated = prevRes.map((r) => {
+        if (r.id !== resId) return r;
+
+        let newDepositPaid = Number(r.depositPaid || 0);
+        const item = items.find((i) => i.id === r.itemId);
+        const minDepositPerUnit = item ? Number(item.minDeposit || 0) : 0;
+        const totalItemPrice = Number(r.totalPrice || 0);
+        const qty = Number(r.quantity || 1);
+
+        if (newStatus === 'deposit_pending') {
+          // Aguardando Sinal -> Sinal Pago fica R$ 0,00
+          newDepositPaid = 0;
+        } else if (newStatus === 'deposit_paid') {
+          // Sinal Pago -> Ajusta para o sinal mínimo cadastrado (multiplicado pela quantidade)
+          const expectedDeposit = minDepositPerUnit * qty;
+          newDepositPaid = expectedDeposit > 0 ? expectedDeposit : (newDepositPaid || minDepositPerUnit);
+        } else if (['fully_paid', 'available_pickup', 'delivered'].includes(newStatus)) {
+          // Pago Total / Pronto p/ Envio / Entregue -> Sinal Pago fica igual ao Valor Total
+          newDepositPaid = totalItemPrice;
+        }
+
+        return {
+          ...r,
+          status: newStatus,
+          depositPaid: newDepositPaid,
+        };
+      });
+
       const target = updated.find((r) => r.id === resId);
-      if (target && user?.id && isSupabaseConfigured) {
-        saveSupabaseReservation(target, user.id);
+      const activeStoreUserId = user?.id || publicStoreUserId;
+      if (target && isSupabaseConfigured && activeStoreUserId) {
+        saveSupabaseReservation(target, activeStoreUserId);
+        broadcastStoreChange(activeStoreUserId);
       }
       return updated;
     });
