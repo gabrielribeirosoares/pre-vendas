@@ -123,46 +123,46 @@ export default function App() {
   const [publicStoreUserId, setPublicStoreUserId] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
-  // Load public store data when visiting a store link as a visitor
+  // Load public store data when visiting a store link as a visitor or visiting another store
   useEffect(() => {
-    if (!user) {
-      const pathname = window.location.pathname;
-      if (pathname.startsWith('/loja/')) {
-        const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
-        if (slug) {
-          setPublicStoreLoading(true);
-          fetchPublicStoreBySlug(slug).then(async (publicSettings) => {
-            if (publicSettings) {
-              // Apply store visual settings
-              const { userId, ...storeSettings } = publicSettings;
-              setSettings((prev) => ({ ...prev, ...storeSettings }));
-              if (userId) setPublicStoreUserId(userId);
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/loja/')) {
+      const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+      const myStoreSlug = settings?.storeName
+        ? settings.storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        : '';
 
-              // Fetch the store's items, customers and reservations
-              if (userId) {
-                const storeData = await fetchPublicStoreItems(userId);
-                if (storeData) {
-                  setPublicStoreData(storeData);
-                  if (Array.isArray(storeData.items)) setItems(storeData.items);
-                  if (Array.isArray(storeData.customers)) setCustomers(storeData.customers);
-                  if (Array.isArray(storeData.reservations)) setReservations(storeData.reservations);
-                }
+      const isOtherStore = slug && slug !== myStoreSlug;
+      if (!user || isOtherStore) {
+        setPublicStoreLoading(true);
+        fetchPublicStoreBySlug(slug).then(async (publicSettings) => {
+          if (publicSettings) {
+            const { userId, ...storeSettings } = publicSettings;
+            if (userId) setPublicStoreUserId(userId);
+
+            if (userId) {
+              const storeData = await fetchPublicStoreItems(userId);
+              if (storeData) {
+                setPublicStoreData({
+                  ...storeSettings,
+                  items: storeData.items || [],
+                  customers: storeData.customers || [],
+                  reservations: storeData.reservations || [],
+                });
               }
             }
-            setPublicStoreLoading(false);
-          }).catch(() => {
-            setPublicStoreLoading(false);
-          });
-        } else {
+          }
           setPublicStoreLoading(false);
-        }
+        }).catch(() => {
+          setPublicStoreLoading(false);
+        });
       } else {
         setPublicStoreLoading(false);
       }
     } else {
       setPublicStoreLoading(false);
     }
-  }, [user]);
+  }, [user, settings?.storeName]);
 
   // Real-time synchronization for store owner & public visitors via Supabase WebSockets & BroadcastChannel
   useEffect(() => {
@@ -617,7 +617,15 @@ export default function App() {
     window.history.pushState(null, '', `/loja/${newSlug}`);
   };
 
-  if (!user && isVisitingPublicStore) {
+  const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
+  const currentPathSlug = window.location.pathname.replace('/loja/', '').replace(/\/$/, '').trim();
+  const myStoreSlug = settings?.storeName
+    ? settings.storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    : '';
+
+  const isVisitingOtherStore = isVisitingPublicStore && Boolean(currentPathSlug) && currentPathSlug !== myStoreSlug;
+
+  if ((!user && isVisitingPublicStore) || isVisitingOtherStore) {
     // Show loading while fetching store data from Supabase
     if (publicStoreLoading) {
       return (
@@ -645,27 +653,20 @@ export default function App() {
     }
 
     const handleOpenMyStoreAdmin = () => {
-      try {
-        const demoUser = JSON.parse(localStorage.getItem('diecast_demo_user') || 'null');
-        if (demoUser) {
-          setUser(demoUser);
-          setPublicStoreUserId(null);
-          setCurrentTab('dashboard');
-          window.history.pushState(null, '', '/');
-        } else {
-          window.location.href = '/';
-        }
-      } catch {
-        window.location.href = '/';
-      }
+      window.location.href = myStoreSlug ? `/loja/${myStoreSlug}` : '/';
     };
+
+    const targetItems = publicStoreData?.items || (isVisitingOtherStore ? [] : items);
+    const targetReservations = publicStoreData?.reservations || (isVisitingOtherStore ? [] : reservations);
+    const targetCustomers = publicStoreData?.customers || (isVisitingOtherStore ? [] : customers);
+    const targetSettings = publicStoreData ? { ...settings, ...publicStoreData } : settings;
 
     return (
       <CustomerPortalView
-        items={items}
-        reservations={reservations}
-        customers={customers}
-        settings={settings}
+        items={targetItems}
+        reservations={targetReservations}
+        customers={targetCustomers}
+        settings={targetSettings}
         storeUserId={publicStoreUserId}
         onReservationCreated={handlePublicReservationCreated}
         onCustomerRegistered={handleCustomerRegistered}
