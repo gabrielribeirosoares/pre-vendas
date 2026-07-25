@@ -592,3 +592,35 @@ export const markAllNotificationsRead = async (userId) => {
   }
 };
 
+// ============================================================
+// REALTIME SUBSCRIPTIONS
+// ============================================================
+export const subscribeToPublicStore = (storeUserId, onDataChange) => {
+  if (!isSupabaseConfigured || !supabase || !storeUserId) return () => {};
+
+  console.log('[Supabase Realtime] Inscrevendo no canal da loja:', storeUserId);
+
+  const channel = supabase
+    .channel(`public-store-${storeUserId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `user_id=eq.${storeUserId}` }, (payload) => {
+      console.log('[Supabase Realtime] Alteração em items:', payload.eventType);
+      onDataChange();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations', filter: `user_id=eq.${storeUserId}` }, (payload) => {
+      console.log('[Supabase Realtime] Alteração em reservations:', payload.eventType);
+      onDataChange();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings', filter: `user_id=eq.${storeUserId}` }, (payload) => {
+      console.log('[Supabase Realtime] Alteração em store_settings:', payload.eventType);
+      onDataChange();
+    })
+    .subscribe((status) => {
+      console.log('[Supabase Realtime] Status da inscrição:', status);
+    });
+
+  return () => {
+    console.log('[Supabase Realtime] Cancelando inscrição do canal:', storeUserId);
+    supabase.removeChannel(channel);
+  };
+};
+

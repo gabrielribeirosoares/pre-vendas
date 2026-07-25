@@ -41,6 +41,7 @@ import {
   fetchNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  subscribeToPublicStore,
 } from './services/supabase';
 
 export default function App() {
@@ -144,6 +145,33 @@ export default function App() {
       setPublicStoreLoading(false);
     }
   }, [user]);
+
+  // Real-time synchronization & short polling for public store visitors
+  useEffect(() => {
+    if (!user && publicStoreUserId && isSupabaseConfigured) {
+      const refreshPublicData = () => {
+        fetchPublicStoreItems(publicStoreUserId).then((storeData) => {
+          if (storeData) {
+            setPublicStoreData(storeData);
+            if (storeData.items) setItems(storeData.items);
+            if (storeData.customers) setCustomers(storeData.customers);
+            if (storeData.reservations) setReservations(storeData.reservations);
+          }
+        });
+      };
+
+      // 1. Subscribe to Supabase Realtime channel
+      const unsubscribe = subscribeToPublicStore(publicStoreUserId, refreshPublicData);
+
+      // 2. Fallback polling every 5 seconds for instant response
+      const interval = setInterval(refreshPublicData, 5000);
+
+      return () => {
+        unsubscribe();
+        clearInterval(interval);
+      };
+    }
+  }, [user, publicStoreUserId]);
 
   // Load notifications for logged-in store owner & set up polling
   useEffect(() => {
