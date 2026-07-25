@@ -153,16 +153,22 @@ export default function App() {
 
             if (userId) {
               const storeData = await fetchPublicStoreItems(userId);
-              if (storeData) {
-                setPublicStoreData({
-                  ...storeSettings,
-                  storeName: storeSettings.storeName || publicSettings.storeName || slug,
-                  items: storeData.items || [],
-                  customers: storeData.customers || [],
-                  reservations: storeData.reservations || [],
-                });
-              }
+              setPublicStoreData({
+                ...storeSettings,
+                storeName: storeSettings.storeName || publicSettings.storeName || slug,
+                items: storeData?.items || [],
+                customers: storeData?.customers || [],
+                reservations: storeData?.reservations || [],
+              });
             }
+          } else {
+            const fallbackName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            setPublicStoreData({
+              storeName: fallbackName,
+              items: [],
+              customers: [],
+              reservations: [],
+            });
           }
           setPublicStoreLoading(false);
         }).catch(() => {
@@ -224,7 +230,46 @@ export default function App() {
         if (unsubscribe) unsubscribe();
       };
     }
-  }, [user?.id, publicStoreUserId, myOwnStoreSlug]);
+  // Load store data for logged-in user from Supabase or reset to clean state on user change
+  useEffect(() => {
+    if (user?.id) {
+      if (isSupabaseConfigured && isValidUUID(user.id)) {
+        fetchSupabaseData(user.id).then((dbData) => {
+          if (dbData) {
+            setItems(dbData.items || []);
+            setCustomers(dbData.customers || []);
+            setReservations(dbData.reservations || []);
+            if (dbData.settings && dbData.settings.storeName) {
+              setSettings((prev) => ({ ...prev, ...dbData.settings }));
+            } else {
+              setSettings({
+                ...INITIAL_SETTINGS,
+                storeName: user.user_metadata?.store_name || `${user.user_metadata?.full_name || 'Minha'} Minis`,
+                storeEmail: user.email || '',
+              });
+            }
+          } else {
+            // New user without database records yet: start with clean slate
+            setItems([]);
+            setCustomers([]);
+            setReservations([]);
+            setSettings({
+              ...INITIAL_SETTINGS,
+              storeName: user.user_metadata?.store_name || `${user.user_metadata?.full_name || 'Minha'} Minis`,
+              storeEmail: user.email || '',
+            });
+          }
+        });
+      } else {
+        if (user.user_metadata?.store_name) {
+          setSettings((prev) => ({
+            ...prev,
+            storeName: user.user_metadata.store_name,
+          }));
+        }
+      }
+    }
+  }, [user?.id]);
 
   // Load notifications for logged-in store owner via Realtime WebSockets
   useEffect(() => {
@@ -554,6 +599,51 @@ export default function App() {
     setReservations((prev) => [newRes, ...prev]);
   };
 
+  const handleLogout = async () => {
+    localStorage.removeItem('diecast_demo_user');
+    localStorage.removeItem(STORAGE_KEYS.ITEMS);
+    localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
+    localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+
+    setUser(null);
+    setItems([]);
+    setCustomers([]);
+    setReservations([]);
+    setSettings(INITIAL_SETTINGS);
+
+    if (isSupabaseConfigured) {
+      await signOutUser();
+    }
+    window.location.href = '/';
+  };
+
+  const handleAuthSuccess = (loggedUser) => {
+    // Clear legacy local storage states from previous user so new user starts clean
+    localStorage.removeItem(STORAGE_KEYS.ITEMS);
+    localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
+    localStorage.removeItem(STORAGE_KEYS.RESERVATIONS);
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+
+    setItems([]);
+    setCustomers([]);
+    setReservations([]);
+    const newStoreName = loggedUser?.user_metadata?.store_name || `${loggedUser?.user_metadata?.full_name || 'Minha'} Minis`;
+    const newSettings = {
+      ...INITIAL_SETTINGS,
+      storeName: newStoreName,
+      storeEmail: loggedUser?.email || '',
+    };
+    setSettings(newSettings);
+    setUser(loggedUser);
+    localStorage.setItem('diecast_demo_user', JSON.stringify(loggedUser));
+
+    const newSlug = getSlug(newStoreName);
+    if (newSlug) {
+      window.history.pushState(null, '', `/loja/${newSlug}`);
+    }
+  };
+
   // Render Loading Spinner during auth check
   if (authLoading) {
     return (
@@ -569,6 +659,11 @@ export default function App() {
         Carregando sistema de pré-vendas...
       </div>
     );
+  }
+
+  // Render Admin Auth Screen if not logged in
+  if (!user && !isVisitingPublicStore) {
+    return <AuthView settings={settings} onAuthSuccess={handleAuthSuccess} />;
   }
 
   // Render Public Store Visitor / Customer Portal if accessing via store link (/loja/slug) and not logged in as Admin
@@ -681,7 +776,9 @@ export default function App() {
     const targetItems = publicStoreData?.items || (isVisitingOtherStore ? [] : items);
     const targetReservations = publicStoreData?.reservations || (isVisitingOtherStore ? [] : reservations);
     const targetCustomers = publicStoreData?.customers || (isVisitingOtherStore ? [] : customers);
-    const targetSettings = publicStoreData ? { ...settings, ...publicStoreData } : settings;
+    const targetSettings = publicStoreData 
+      ? { ...settings, ...publicStoreData }
+      : (isVisitingOtherStore ? { ...settings, storeName: currentPathSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') } : settings);
 
     return (
       <CustomerPortalView
@@ -701,7 +798,7 @@ export default function App() {
 
   // Render Admin Auth Screen if not logged in
   if (!user) {
-    return <AuthView settings={settings} onAuthSuccess={(loggedUser) => setUser(loggedUser)} />;
+    return <AuthView settings={settings} onAuthSuccess={handleAuthSuccess} />;
   }
 
   // Render Public Storefront View if active

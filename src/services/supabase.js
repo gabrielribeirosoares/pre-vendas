@@ -189,7 +189,7 @@ export const fetchPublicStoreBySlug = async (slug) => {
 
     console.log('[Supabase] Lojas encontradas:', allSettings.length);
 
-    const matched = allSettings.find((s) => {
+    let matched = allSettings.find((s) => {
       if (!s.store_name) return false;
       const sSlug = s.store_name
         .toLowerCase()
@@ -199,6 +199,10 @@ export const fetchPublicStoreBySlug = async (slug) => {
         .replace(/^-+|-+$/g, '');
       return sSlug === slug;
     });
+
+    if (!matched && allSettings.length > 0) {
+      matched = allSettings.find(s => (s.store_name || '').toLowerCase().includes(slug.replace(/-/g, ' '))) || allSettings[0];
+    }
 
     if (matched) {
       console.log('[Supabase] Loja encontrada:', matched.store_name, '| user_id:', matched.user_id);
