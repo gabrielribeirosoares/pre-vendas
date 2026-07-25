@@ -11,6 +11,7 @@ import {
   Menu,
   Store,
   ShoppingBag,
+  PlusCircle,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -28,6 +29,37 @@ export const Sidebar = ({
       return JSON.parse(localStorage.getItem('diecast_customer_stores') || '[]');
     } catch { return []; }
   })();
+
+  const handleAccessOtherStore = () => {
+    const input = window.prompt(
+      'Cole o link da loja ou digite o identificador/slug (Exemplo: gabriel-minis):'
+    );
+    if (!input) return;
+
+    let slug = input.trim();
+    if (slug.includes('/loja/')) {
+      slug = slug.split('/loja/')[1].split('/')[0].split('?')[0];
+    }
+    slug = slug.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+    if (!slug) {
+      alert('Link ou nome de loja inválido!');
+      return;
+    }
+
+    try {
+      const stores = JSON.parse(localStorage.getItem('diecast_customer_stores') || '[]');
+      const formattedName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      if (!stores.some((s) => s.slug === slug)) {
+        stores.push({ name: formattedName, slug });
+        localStorage.setItem('diecast_customer_stores', JSON.stringify(stores));
+      }
+    } catch (err) {
+      console.warn('Erro ao salvar loja:', err);
+    }
+
+    window.location.href = `/loja/${slug}`;
+  };
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'catalog', label: 'Catálogo de Pré-Vendas', icon: Car, count: counts.items },
@@ -237,7 +269,7 @@ export const Sidebar = ({
 
               {customerStores.length === 0 ? (
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0 8px' }}>
-                  Nenhuma outra loja vinculada.
+                  Nenhuma outra loja vinculada ainda.
                 </div>
               ) : (
                 customerStores.map((st) => (
@@ -263,6 +295,25 @@ export const Sidebar = ({
                   </button>
                 ))
               )}
+
+              <button
+                onClick={handleAccessOtherStore}
+                className="btn btn-secondary"
+                style={{
+                  width: '100%',
+                  justify: 'flex-start',
+                  fontSize: '0.78rem',
+                  gap: '6px',
+                  padding: '8px 10px',
+                  marginTop: '4px',
+                  color: 'var(--accent-cyan)',
+                  borderColor: 'rgba(56, 189, 248, 0.25)',
+                  background: 'rgba(56, 189, 248, 0.05)',
+                }}
+              >
+                <PlusCircle size={14} />
+                <span>+ Entrar em Outra Loja</span>
+              </button>
             </div>
           )}
         </nav>
