@@ -343,7 +343,13 @@ export const saveSupabaseItem = async (item, userId) => {
   }
 
   const { data, error } = await supabase.from('items').upsert(payload).select();
-  if (error) console.error('[Supabase] Erro ao salvar item:', error);
+  if (error) {
+    if (error.code === '23503') {
+      console.warn('[Supabase] Trava de Chave Estrangeira detectada na tabela items. Execute o script SQL para rodar: ALTER TABLE items DROP CONSTRAINT items_user_id_fkey;');
+    } else {
+      console.error('[Supabase] Erro ao salvar item:', error);
+    }
+  }
   if (data && data[0]) {
     return {
       ...item,

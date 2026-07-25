@@ -76,7 +76,10 @@ export default function App() {
         if (session?.user) {
           setUser(session.user);
         } else {
-          setUser(null);
+          const demoUser = localStorage.getItem('diecast_demo_user');
+          if (!demoUser) {
+            setUser(null);
+          }
         }
         setAuthLoading(false);
       });
