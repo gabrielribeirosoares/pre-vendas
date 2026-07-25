@@ -30,6 +30,7 @@ import {
   signOutUser,
   fetchSupabaseData,
   fetchPublicStoreBySlug,
+  fetchPublicStoreItems,
   saveSupabaseSettings,
   saveSupabaseItem,
   deleteSupabaseItem,
@@ -46,6 +47,10 @@ export default function App() {
     return demo ? JSON.parse(demo) : null;
   });
   const [authLoading, setAuthLoading] = useState(true);
+  const [publicStoreLoading, setPublicStoreLoading] = useState(() => {
+    return window.location.pathname.startsWith('/loja/');
+  });
+  const [publicStoreData, setPublicStoreData] = useState(null);
 
   // Check Supabase session on startup
   useEffect(() => {
@@ -94,20 +99,43 @@ export default function App() {
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
   const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
 
-  // Check if URL has a store slug (e.g., /loja/gabriel-minis) when visiting unauthenticated
+  // Load public store data when visiting a store link as a visitor
   useEffect(() => {
     if (!user) {
       const pathname = window.location.pathname;
       if (pathname.startsWith('/loja/')) {
         const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
         if (slug) {
-          fetchPublicStoreBySlug(slug).then((publicSettings) => {
+          setPublicStoreLoading(true);
+          fetchPublicStoreBySlug(slug).then(async (publicSettings) => {
             if (publicSettings) {
-              setSettings((prev) => ({ ...prev, ...publicSettings }));
+              // Apply store visual settings
+              const { userId, ...storeSettings } = publicSettings;
+              setSettings((prev) => ({ ...prev, ...storeSettings }));
+
+              // Fetch the store's items, customers and reservations
+              if (userId) {
+                const storeData = await fetchPublicStoreItems(userId);
+                if (storeData) {
+                  setPublicStoreData(storeData);
+                  if (storeData.items && storeData.items.length > 0) setItems(storeData.items);
+                  if (storeData.customers && storeData.customers.length > 0) setCustomers(storeData.customers);
+                  if (storeData.reservations && storeData.reservations.length > 0) setReservations(storeData.reservations);
+                }
+              }
             }
+            setPublicStoreLoading(false);
+          }).catch(() => {
+            setPublicStoreLoading(false);
           });
+        } else {
+          setPublicStoreLoading(false);
         }
+      } else {
+        setPublicStoreLoading(false);
       }
+    } else {
+      setPublicStoreLoading(false);
     }
   }, [user]);
 
@@ -391,6 +419,32 @@ export default function App() {
   const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
 
   if (!user && isVisitingPublicStore) {
+    // Show loading while fetching store data from Supabase
+    if (publicStoreLoading) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-main)',
+          color: 'var(--accent-cyan)',
+          fontWeight: 600,
+          flexDirection: 'column',
+          gap: '12px',
+        }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '50%',
+            border: '3px solid var(--accent-cyan)',
+            borderTopColor: 'transparent',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          Carregando loja...
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      );
+    }
+
     return (
       <CustomerPortalView
         items={items}

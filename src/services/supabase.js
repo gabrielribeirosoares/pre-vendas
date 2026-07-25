@@ -162,8 +162,19 @@ export const fetchPublicStoreBySlug = async (slug) => {
   if (!isSupabaseConfigured || !supabase || !slug) return null;
 
   try {
-    const { data: allSettings } = await supabase.from('store_settings').select('*');
-    if (!allSettings || allSettings.length === 0) return null;
+    console.log('[Supabase] Buscando loja pública pelo slug:', slug);
+    const { data: allSettings, error } = await supabase.from('store_settings').select('*');
+    
+    if (error) {
+      console.error('[Supabase] Erro ao buscar store_settings:', error);
+      return null;
+    }
+    if (!allSettings || allSettings.length === 0) {
+      console.log('[Supabase] Nenhuma store_settings encontrada');
+      return null;
+    }
+
+    console.log('[Supabase] Lojas encontradas:', allSettings.length);
 
     const matched = allSettings.find((s) => {
       if (!s.store_name) return false;
@@ -177,9 +188,11 @@ export const fetchPublicStoreBySlug = async (slug) => {
     });
 
     if (matched) {
+      console.log('[Supabase] Loja encontrada:', matched.store_name, '| user_id:', matched.user_id);
       return {
+        userId: matched.user_id,
         storeName: matched.store_name,
-        pixKey: matched.pix_key,
+        pixKey: matched.pix_key || '',
         primaryColor: matched.primary_color || '#38bdf8',
         secondaryColor: matched.secondary_color || '#a855f7',
         themeMode: matched.theme_mode || 'dark',
@@ -187,10 +200,68 @@ export const fetchPublicStoreBySlug = async (slug) => {
         faviconUrl: matched.favicon_url || '',
       };
     }
+
+    console.log('[Supabase] Nenhuma loja correspondente ao slug:', slug);
   } catch (err) {
-    console.error('Erro ao buscar loja pública por slug:', err);
+    console.error('[Supabase] Erro ao buscar loja pública por slug:', err);
   }
   return null;
+};
+
+// Fetch public store items, customers and reservations by store owner user_id
+export const fetchPublicStoreItems = async (storeUserId) => {
+  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+
+  try {
+    const [itemsRes, custRes, resRes] = await Promise.all([
+      supabase.from('items').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
+      supabase.from('customers').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
+      supabase.from('reservations').select('*').eq('user_id', storeUserId).order('created_at', { ascending: false }),
+    ]);
+
+    const items = (itemsRes.data || []).map(i => ({
+      id: i.id,
+      brandId: i.brand_id,
+      sku: i.sku,
+      name: i.name,
+      scale: i.scale,
+      retailPrice: Number(i.retail_price || 0),
+      minDeposit: Number(i.min_deposit || 0),
+      wholesaleCost: Number(i.wholesale_cost || 0),
+      releaseQuarter: i.release_quarter,
+      status: i.status,
+      imageUrl: i.image_url,
+      description: i.description,
+      storeBufferUnits: Number(i.store_buffer_units || 0),
+      createdAt: i.created_at,
+    }));
+
+    const customers = (custRes.data || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      phone: c.phone,
+      instagram: c.instagram,
+      notes: c.notes,
+      createdAt: c.created_at,
+    }));
+
+    const reservations = (resRes.data || []).map(r => ({
+      id: r.id,
+      customerId: r.customer_id,
+      itemId: r.item_id,
+      quantity: Number(r.quantity || 1),
+      depositPaid: Number(r.deposit_paid || 0),
+      totalPrice: Number(r.total_price || 0),
+      status: r.status,
+      notes: r.notes,
+      createdAt: r.created_at,
+    }));
+
+    return { items, customers, reservations };
+  } catch (err) {
+    console.error('[Supabase] Erro ao buscar dados públicos da loja:', err);
+    return null;
+  }
 };
 export const fetchCustomerStores = async (phoneOrEmail) => {
   if (!isSupabaseConfigured || !supabase || !phoneOrEmail) return [];
