@@ -81,6 +81,7 @@ export const CustomerPortalView = ({
   onBackToAdmin,
   onReservationCreated,
   onCustomerRegistered,
+  onUpgradeToStore,
 }) => {
   const [session, setSession] = useState(() => getCustomerSession());
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
@@ -732,8 +733,15 @@ export const CustomerPortalView = ({
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <a
-                  href="/"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onUpgradeToStore) {
+                      onUpgradeToStore(session);
+                    } else {
+                      window.location.href = '/';
+                    }
+                  }}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -746,11 +754,12 @@ export const CustomerPortalView = ({
                     borderRadius: 'var(--radius-sm)',
                     background: 'rgba(56, 189, 248, 0.1)',
                     border: '1px solid rgba(56, 189, 248, 0.25)',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
                   }}
                 >
                   <Store size={14} /> Crie sua própria loja
-                </a>
+                </button>
 
                 <button onClick={handleContactStore} className="btn btn-whatsapp" style={{ padding: '8px 14px', fontSize: '0.8125rem', gap: '6px' }}>
                   <MessageCircle size={16} /> Falar com a Loja

@@ -412,11 +412,14 @@ export const deleteSupabaseReservation = async (resId) => {
   if (!isSupabaseConfigured || !supabase || !resId) return;
   try {
     console.log('[Supabase] Excluindo reserva:', resId);
-    const { error } = await supabase.from('reservations').delete().eq('id', resId);
-    if (error) {
-      console.error('[Supabase] Erro ao excluir reserva:', error);
+    if (isValidUUID(resId)) {
+      const { error } = await supabase.from('reservations').delete().eq('id', resId);
+      if (error) console.error('[Supabase] Erro ao excluir reserva por UUID:', error);
+      else console.log('[Supabase] Reserva excluída com sucesso do banco:', resId);
     } else {
-      console.log('[Supabase] Reserva excluída com sucesso:', resId);
+      console.warn('[Supabase] ID de reserva local (não UUID), limpando do banco via filtro:', resId);
+      const { error } = await supabase.from('reservations').delete().ilike('notes', `%${resId}%`);
+      if (error) console.error('[Supabase] Erro ao excluir reserva local:', error);
     }
   } catch (err) {
     console.error('[Supabase] Erro ao excluir reserva:', err);

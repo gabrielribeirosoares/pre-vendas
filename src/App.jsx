@@ -126,9 +126,9 @@ export default function App() {
                 const storeData = await fetchPublicStoreItems(userId);
                 if (storeData) {
                   setPublicStoreData(storeData);
-                  if (storeData.items && storeData.items.length > 0) setItems(storeData.items);
-                  if (storeData.customers && storeData.customers.length > 0) setCustomers(storeData.customers);
-                  if (storeData.reservations && storeData.reservations.length > 0) setReservations(storeData.reservations);
+                  if (Array.isArray(storeData.items)) setItems(storeData.items);
+                  if (Array.isArray(storeData.customers)) setCustomers(storeData.customers);
+                  if (Array.isArray(storeData.reservations)) setReservations(storeData.reservations);
                 }
               }
             }
@@ -147,28 +147,30 @@ export default function App() {
     }
   }, [user]);
 
-  // Real-time synchronization for public store visitors via Supabase WebSockets
+  // Real-time synchronization for store owner & public visitors via Supabase WebSockets
   useEffect(() => {
-    if (!user && publicStoreUserId && isSupabaseConfigured) {
-      const refreshPublicData = () => {
-        fetchPublicStoreItems(publicStoreUserId).then((storeData) => {
+    const activeStoreUserId = user?.id || publicStoreUserId;
+    if (activeStoreUserId && isSupabaseConfigured) {
+      const refreshStoreData = () => {
+        console.log('[Supabase Realtime] Atualizando dados em tempo real para:', activeStoreUserId);
+        fetchPublicStoreItems(activeStoreUserId).then((storeData) => {
           if (storeData) {
             setPublicStoreData(storeData);
-            if (storeData.items) setItems(storeData.items);
-            if (storeData.customers) setCustomers(storeData.customers);
-            if (storeData.reservations) setReservations(storeData.reservations);
+            if (Array.isArray(storeData.items)) setItems(storeData.items);
+            if (Array.isArray(storeData.customers)) setCustomers(storeData.customers);
+            if (Array.isArray(storeData.reservations)) setReservations(storeData.reservations);
           }
         });
       };
 
-      // Subscribe to Supabase Realtime WebSocket channel (triggers on actual DB changes)
-      const unsubscribe = subscribeToPublicStore(publicStoreUserId, refreshPublicData);
+      // Subscribe to Supabase Realtime WebSocket channel
+      const unsubscribe = subscribeToPublicStore(activeStoreUserId, refreshStoreData);
 
       return () => {
         unsubscribe();
       };
     }
-  }, [user, publicStoreUserId]);
+  }, [user?.id, publicStoreUserId]);
 
   // Load notifications for logged-in store owner via Realtime WebSockets
   useEffect(() => {
@@ -496,6 +498,27 @@ export default function App() {
     });
   };
 
+  const handleUpgradeToStore = (collectorSession) => {
+    const storeName = collectorSession?.name ? `${collectorSession.name} Minis` : 'Minha Loja Diecast';
+    const storeUser = {
+      id: collectorSession?.id || `user-${Date.now()}`,
+      email: collectorSession?.email || 'colecionador@loja.com',
+      user_metadata: {
+        full_name: collectorSession?.name || 'Colecionador Lojista',
+        store_name: storeName,
+      },
+    };
+
+    localStorage.setItem('diecast_demo_user', JSON.stringify(storeUser));
+    setUser(storeUser);
+    setSettings((prev) => ({
+      ...prev,
+      storeName: storeName,
+    }));
+    setCurrentTab('dashboard');
+    window.history.replaceState(null, '', '/');
+  };
+
   if (!user && isVisitingPublicStore) {
     // Show loading while fetching store data from Supabase
     if (publicStoreLoading) {
@@ -532,6 +555,7 @@ export default function App() {
         storeUserId={publicStoreUserId}
         onReservationCreated={handlePublicReservationCreated}
         onCustomerRegistered={handleCustomerRegistered}
+        onUpgradeToStore={handleUpgradeToStore}
         onBackToStorefront={() => setCurrentTab('storefront')}
       />
     );
@@ -565,6 +589,7 @@ export default function App() {
         storeUserId={user?.id}
         onReservationCreated={handlePublicReservationCreated}
         onCustomerRegistered={handleCustomerRegistered}
+        onUpgradeToStore={handleUpgradeToStore}
         onBackToStorefront={() => setCurrentTab('storefront')}
         onBackToAdmin={() => setCurrentTab('dashboard')}
       />
