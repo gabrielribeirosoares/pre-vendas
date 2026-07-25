@@ -142,13 +142,13 @@ export const fetchSupabaseData = async (userId) => {
     }));
 
     const settings = settingsRes.data ? {
-      storeName: settingsRes.data.store_name || '',
-      pixKey: settingsRes.data.pix_key || '',
-      primaryColor: settingsRes.data.primary_color || '#38bdf8',
-      secondaryColor: settingsRes.data.secondary_color || '#a855f7',
-      themeMode: settingsRes.data.theme_mode || 'dark',
-      logoUrl: settingsRes.data.logo_url || '',
-      faviconUrl: settingsRes.data.favicon_url || '',
+      storeName: settingsRes.data.store_name ?? null,
+      pixKey: settingsRes.data.pix_key ?? null,
+      primaryColor: settingsRes.data.primary_color ?? null,
+      secondaryColor: settingsRes.data.secondary_color ?? null,
+      themeMode: settingsRes.data.theme_mode ?? null,
+      logoUrl: settingsRes.data.logo_url ?? null,
+      faviconUrl: settingsRes.data.favicon_url ?? null,
     } : null;
 
     return { items, customers, reservations, settings };
@@ -340,6 +340,19 @@ export const deleteSupabaseReservation = async (resId) => {
 export const saveSupabaseSettings = async (settings, userId) => {
   if (!isSupabaseConfigured || !supabase || !userId) return;
   try {
+    // Truncate logo/favicon data URLs if too large for Supabase TEXT column
+    let logoUrl = settings.logoUrl || '';
+    let faviconUrl = settings.faviconUrl || '';
+    const MAX_DATA_URL_LENGTH = 500000; // 500KB limit
+    if (logoUrl.length > MAX_DATA_URL_LENGTH) {
+      console.warn('Logo data URL muito grande, não será salvo no Supabase. Use uma URL externa.');
+      logoUrl = '';
+    }
+    if (faviconUrl.length > MAX_DATA_URL_LENGTH) {
+      console.warn('Favicon data URL muito grande, não será salvo no Supabase.');
+      faviconUrl = '';
+    }
+
     const payload = {
       user_id: userId,
       store_name: settings.storeName || '',
@@ -347,18 +360,23 @@ export const saveSupabaseSettings = async (settings, userId) => {
       primary_color: settings.primaryColor || '#38bdf8',
       secondary_color: settings.secondaryColor || '#a855f7',
       theme_mode: settings.themeMode || 'dark',
-      logo_url: settings.logoUrl || '',
-      favicon_url: settings.faviconUrl || '',
+      logo_url: logoUrl,
+      favicon_url: faviconUrl,
     };
 
-    const { error } = await supabase
+    console.log('[Supabase] Salvando store_settings:', { ...payload, logo_url: logoUrl ? `(${logoUrl.length} chars)` : '', favicon_url: faviconUrl ? `(${faviconUrl.length} chars)` : '' });
+
+    const { data, error } = await supabase
       .from('store_settings')
-      .upsert(payload, { onConflict: 'user_id' });
+      .upsert(payload, { onConflict: 'user_id' })
+      .select();
 
     if (error) {
-      console.error('Erro ao salvar store_settings no Supabase:', error);
+      console.error('[Supabase] Erro ao salvar store_settings:', error);
+    } else {
+      console.log('[Supabase] store_settings salvo com sucesso:', data);
     }
   } catch (err) {
-    console.error('Erro ao salvar store_settings no Supabase:', err);
+    console.error('[Supabase] Erro ao salvar store_settings:', err);
   }
 };

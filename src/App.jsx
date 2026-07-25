@@ -139,14 +139,18 @@ export default function App() {
           if (remote.customers && remote.customers.length > 0) setCustomers(remote.customers);
           if (remote.reservations && remote.reservations.length > 0) setReservations(remote.reservations);
           
-          if (remote.settings && Object.keys(remote.settings).length > 0) {
+          if (remote.settings) {
+            console.log('[App] Settings do Supabase recebidos:', remote.settings);
             setSettings((prev) => {
               const merged = { ...prev };
               Object.keys(remote.settings).forEach((key) => {
-                if (remote.settings[key] !== undefined && remote.settings[key] !== null && remote.settings[key] !== '') {
-                  merged[key] = remote.settings[key];
+                const remoteVal = remote.settings[key];
+                // Only override if Supabase has a real saved value (not null)
+                if (remoteVal !== null && remoteVal !== undefined) {
+                  merged[key] = remoteVal;
                 }
               });
+              console.log('[App] Settings finais após merge:', merged);
               return merged;
             });
           }
