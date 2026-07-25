@@ -43,6 +43,7 @@ import {
   markAllNotificationsRead,
   subscribeToPublicStore,
   subscribeToNotifications,
+  broadcastStoreChange,
 } from './services/supabase';
 
 export default function App() {
