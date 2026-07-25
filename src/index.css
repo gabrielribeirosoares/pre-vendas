@@ -276,8 +276,14 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .select-field option {
-  background: var(--bg-card);
-  color: var(--text-primary);
+  background-color: #131b2e;
+  color: #f8fafc;
+  padding: 8px 12px;
+}
+
+[data-theme='light'] .select-field option {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 /* Tables Responsive Layout (No Horizontal Scrollbar) */

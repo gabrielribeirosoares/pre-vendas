@@ -132,15 +132,25 @@ export const ReservationsView = ({
                 const statusConfig = RESERVATION_STATUSES[res.status] || RESERVATION_STATUSES.deposit_paid;
                 const balance = Math.max(0, (Number(res.totalPrice) || 0) - (Number(res.depositPaid) || 0));
 
+                let custName = customer?.name;
+                let custPhone = customer?.phone;
+                if (!custName && res.notes) {
+                  const match = res.notes.match(/Cliente:\s*([^|(]+)/i);
+                  if (match && match[1]) custName = `${match[1].trim()} (Portal)`;
+                  const phoneMatch = res.notes.match(/\((\d{10,11})\)/);
+                  if (phoneMatch && phoneMatch[1]) custPhone = phoneMatch[1];
+                }
+                if (!custName) custName = 'Cliente do Portal';
+
                 return (
                   <tr key={res.id}>
                     {/* Customer */}
                     <td className="col-customer">
                       <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {customer ? customer.name : 'Cliente Removido'}
+                        {custName}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {customer?.phone} {customer?.instagram ? `• ${customer.instagram}` : ''}
+                        {custPhone} {customer?.instagram ? `• ${customer.instagram}` : ''}
                       </div>
                     </td>
 

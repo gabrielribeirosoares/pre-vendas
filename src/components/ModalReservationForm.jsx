@@ -121,11 +121,22 @@ export const ModalReservationForm = ({
                 className="select-field"
                 required
               >
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.phone})
+                {customers.length === 0 ? (
+                  <option value="" style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                    Nenhum cliente cadastrado ainda
                   </option>
-                ))}
+                ) : (
+                  <>
+                    <option value="" style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                      -- Selecione o Cliente --
+                    </option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id} style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                        {c.name} ({c.phone})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
@@ -138,11 +149,22 @@ export const ModalReservationForm = ({
                 className="select-field"
                 required
               >
-                {items.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.sku} - {i.name} (Venda: {formatBRL(i.retailPrice)} | Sinal: {formatBRL(i.minDeposit)})
+                {items.length === 0 ? (
+                  <option value="" style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                    Nenhum modelo cadastrado no catálogo
                   </option>
-                ))}
+                ) : (
+                  <>
+                    <option value="" style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                      -- Selecione o Modelo --
+                    </option>
+                    {items.map((i) => (
+                      <option key={i.id} value={i.id} style={{ backgroundColor: '#131b2e', color: '#f8fafc' }}>
+                        {i.sku} - {i.name} (Venda: {formatBRL(i.retailPrice)} | Sinal: {formatBRL(i.minDeposit)})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 

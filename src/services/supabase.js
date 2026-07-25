@@ -464,9 +464,45 @@ export const savePublicReservation = async (reservation, storeUserId) => {
   if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
 
   try {
+    let customerId = isValidUUID(reservation.customerId) ? reservation.customerId : null;
+
+    // Auto-create/find customer in store's customers table if name & phone are provided
+    if (!customerId && reservation.customerName && reservation.customerPhone) {
+      try {
+        const cleanPhone = reservation.customerPhone.replace(/\D/g, '');
+        // 1. Check if customer already exists for this store
+        const { data: existingCust } = await supabase
+          .from('customers')
+          .select('id, phone')
+          .eq('user_id', storeUserId);
+
+        const match = (existingCust || []).find(c => (c.phone || '').replace(/\D/g, '') === cleanPhone);
+        if (match) {
+          customerId = match.id;
+        } else {
+          // 2. Insert new customer for this store
+          const { data: newCust } = await supabase
+            .from('customers')
+            .insert([{
+              user_id: storeUserId,
+              name: reservation.customerName,
+              phone: reservation.customerPhone,
+              notes: 'Cadastrado automaticamente via Portal do Colecionador',
+            }])
+            .select();
+
+          if (newCust && newCust[0]) {
+            customerId = newCust[0].id;
+          }
+        }
+      } catch (custErr) {
+        console.warn('[Supabase] Aviso ao vincular cliente automático:', custErr);
+      }
+    }
+
     const payload = {
       user_id: storeUserId,
-      customer_id: isValidUUID(reservation.customerId) ? reservation.customerId : null,
+      customer_id: customerId,
       item_id: isValidUUID(reservation.itemId) ? reservation.itemId : null,
       quantity: reservation.quantity || 1,
       deposit_paid: 0,
@@ -623,6 +659,21 @@ export const subscribeToPublicStore = (storeUserId, onDataChange) => {
 
   return () => {
     console.log('[Supabase Realtime] Cancelando inscrição do canal:', storeUserId);
+    supabase.removeChannel(channel);
+  };
+};
+
+export const subscribeToNotifications = (userId, onNotificationChange) => {
+  if (!isSupabaseConfigured || !supabase || !userId) return () => {};
+
+  const channel = supabase
+    .channel(`notifications-${userId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => {
+      onNotificationChange();
+    })
+    .subscribe();
+
+  return () => {
     supabase.removeChannel(channel);
   };
 };

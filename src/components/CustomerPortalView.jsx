@@ -118,9 +118,16 @@ export const CustomerPortalView = ({
     : null;
 
   // Customer reservations
-  const myReservations = loggedCustomer
+  const cleanSessionPhone = session ? (session.phone || '').replace(/\D/g, '') : '';
+  const myReservations = session
     ? reservations
-        .filter((r) => r.customerId === loggedCustomer.id && r.status !== 'cancelled')
+        .filter((r) => {
+          if (r.status === 'cancelled') return false;
+          if (loggedCustomer && r.customerId === loggedCustomer.id) return true;
+          if (cleanSessionPhone && r.notes && r.notes.includes(cleanSessionPhone)) return true;
+          if (session.name && r.notes && r.notes.toLowerCase().includes(session.name.toLowerCase())) return true;
+          return false;
+        })
         .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     : [];
 
@@ -249,10 +256,12 @@ export const CustomerPortalView = ({
 
     const reservationData = {
       customerId: customerMatch?.id || null,
+      customerName: session.name,
+      customerPhone: session.phone,
       itemId: item.id,
       quantity: reserveQuantity,
       totalPrice,
-      notes: `Reserva via portal: ${item.name} (${item.sku}) | Cliente: ${session.name}${reserveNotes ? ` | Obs: ${reserveNotes}` : ''}`,
+      notes: `Reserva via portal: ${item.name} (${item.sku}) | Cliente: ${session.name} (${session.phone})${reserveNotes ? ` | Obs: ${reserveNotes}` : ''}`,
     };
 
     const saved = await savePublicReservation(reservationData, storeUserId);

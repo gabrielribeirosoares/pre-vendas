@@ -42,6 +42,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   subscribeToPublicStore,
+  subscribeToNotifications,
 } from './services/supabase';
 
 export default function App() {
@@ -146,7 +147,7 @@ export default function App() {
     }
   }, [user]);
 
-  // Real-time synchronization & short polling for public store visitors
+  // Real-time synchronization for public store visitors via Supabase WebSockets
   useEffect(() => {
     if (!user && publicStoreUserId && isSupabaseConfigured) {
       const refreshPublicData = () => {
@@ -160,20 +161,16 @@ export default function App() {
         });
       };
 
-      // 1. Subscribe to Supabase Realtime channel
+      // Subscribe to Supabase Realtime WebSocket channel (triggers on actual DB changes)
       const unsubscribe = subscribeToPublicStore(publicStoreUserId, refreshPublicData);
-
-      // 2. Fallback polling every 5 seconds for instant response
-      const interval = setInterval(refreshPublicData, 5000);
 
       return () => {
         unsubscribe();
-        clearInterval(interval);
       };
     }
   }, [user, publicStoreUserId]);
 
-  // Load notifications for logged-in store owner & set up polling
+  // Load notifications for logged-in store owner via Realtime WebSockets
   useEffect(() => {
     if (user?.id && isSupabaseConfigured) {
       const loadNotes = () => {
@@ -182,8 +179,13 @@ export default function App() {
         });
       };
       loadNotes();
-      const interval = setInterval(loadNotes, 15000); // poll every 15s
-      return () => clearInterval(interval);
+
+      // Subscribe to Supabase Realtime WebSocket channel for notifications
+      const unsubscribe = subscribeToNotifications(user.id, loadNotes);
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [user?.id]);
 
