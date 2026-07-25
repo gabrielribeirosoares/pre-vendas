@@ -44,6 +44,8 @@ import {
   subscribeToPublicStore,
   subscribeToNotifications,
   broadcastStoreChange,
+  generateUUID,
+  isValidUUID,
 } from './services/supabase';
 
 export default function App() {
@@ -544,7 +546,7 @@ export default function App() {
   const handleUpgradeToStore = async (collectorSession) => {
     const name = collectorSession?.name || 'Nova Loja';
     const storeName = `${name} Minis`;
-    const newStoreUserId = collectorSession?.id || `user-${Date.now()}`;
+    const newStoreUserId = (collectorSession?.id && isValidUUID(collectorSession.id)) ? collectorSession.id : generateUUID();
 
     const storeUser = {
       id: newStoreUserId,

@@ -71,9 +71,22 @@ export const resetUserPassword = async (email) => {
   return { data, error };
 };
 
+export const isValidUUID = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+export const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 // Database Mappers & Helpers
 export const fetchSupabaseData = async (userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return null;
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return null;
 
   try {
     const [itemsRes, custRes, resRes, settingsRes] = await Promise.all([
@@ -209,7 +222,7 @@ export const fetchPublicStoreBySlug = async (slug) => {
 };
 
 export const fetchPublicStoreItems = async (storeUserId) => {
-  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+  if (!isSupabaseConfigured || !supabase || !storeUserId || !isValidUUID(storeUserId)) return null;
 
   try {
     console.log('[Supabase] Buscando itens/reservas públicos para o user_id:', storeUserId);
@@ -464,7 +477,7 @@ export const deleteSupabaseReservation = async (resId, userId) => {
 };
 
 export const saveSupabaseSettings = async (settings, userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return;
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return;
   try {
     // Truncate logo/favicon data URLs if too large for Supabase TEXT column
     let logoUrl = settings.logoUrl || '';
@@ -507,10 +520,8 @@ export const saveSupabaseSettings = async (settings, userId) => {
   }
 };
 
-const isValidUUID = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
 export const registerPublicCustomer = async ({ name, phone, email }, storeUserId) => {
-  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+  if (!isSupabaseConfigured || !supabase || !storeUserId || !isValidUUID(storeUserId)) return null;
 
   try {
     const cleanPhone = phone.replace(/\D/g, '');
@@ -564,7 +575,7 @@ export const registerPublicCustomer = async ({ name, phone, email }, storeUserId
 // PUBLIC RESERVATION (Customer creates reservation from portal)
 // ============================================================
 export const savePublicReservation = async (reservation, storeUserId) => {
-  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+  if (!isSupabaseConfigured || !supabase || !storeUserId || !isValidUUID(storeUserId)) return null;
 
   try {
     let customerId = isValidUUID(reservation.customerId) ? reservation.customerId : null;
@@ -629,7 +640,7 @@ export const savePublicReservation = async (reservation, storeUserId) => {
 // NOTIFICATIONS SYSTEM
 // ============================================================
 export const createNotification = async (storeUserId, { type, title, message, metadata }) => {
-  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+  if (!isSupabaseConfigured || !supabase || !storeUserId || !isValidUUID(storeUserId)) return null;
 
   try {
     const { data, error } = await supabase
@@ -656,7 +667,7 @@ export const createNotification = async (storeUserId, { type, title, message, me
 };
 
 export const fetchNotifications = async (userId) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return [];
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return [];
 
   try {
     const { data, error } = await supabase
@@ -717,7 +728,7 @@ export const markAllNotificationsRead = async (userId) => {
 // REALTIME SUBSCRIPTIONS
 // ============================================================
 export const subscribeToPublicStore = (storeUserId, onDataChange) => {
-  if (!isSupabaseConfigured || !supabase || !storeUserId) return () => {};
+  if (!isSupabaseConfigured || !supabase || !storeUserId || !isValidUUID(storeUserId)) return () => {};
 
   console.log('[Supabase Realtime] Inscrevendo no canal da loja:', storeUserId);
 
@@ -750,7 +761,7 @@ export const subscribeToPublicStore = (storeUserId, onDataChange) => {
 };
 
 export const subscribeToNotifications = (userId, onNotificationChange) => {
-  if (!isSupabaseConfigured || !supabase || !userId) return () => {};
+  if (!isSupabaseConfigured || !supabase || !userId || !isValidUUID(userId)) return () => {};
 
   const channel = supabase
     .channel(`notifications-${userId}`)
