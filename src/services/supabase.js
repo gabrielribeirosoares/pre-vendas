@@ -451,3 +451,142 @@ export const saveSupabaseSettings = async (settings, userId) => {
     console.error('[Supabase] Erro ao salvar store_settings:', err);
   }
 };
+
+// ============================================================
+// PUBLIC RESERVATION (Customer creates reservation from portal)
+// ============================================================
+export const savePublicReservation = async (reservation, storeUserId) => {
+  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+
+  try {
+    const payload = {
+      user_id: storeUserId,
+      customer_id: reservation.customerId || null,
+      item_id: reservation.itemId || null,
+      quantity: reservation.quantity || 1,
+      deposit_paid: 0,
+      total_price: reservation.totalPrice || 0,
+      status: 'deposit_pending',
+      notes: reservation.notes || '',
+    };
+
+    console.log('[Supabase] Criando reserva pública:', payload);
+
+    const { data, error } = await supabase
+      .from('reservations')
+      .insert([payload])
+      .select();
+
+    if (error) {
+      console.error('[Supabase] Erro ao criar reserva pública:', error);
+      return null;
+    }
+
+    if (data && data[0]) {
+      console.log('[Supabase] Reserva pública criada:', data[0].id);
+      return {
+        id: data[0].id,
+        customerId: data[0].customer_id,
+        itemId: data[0].item_id,
+        quantity: Number(data[0].quantity || 1),
+        depositPaid: 0,
+        totalPrice: Number(data[0].total_price || 0),
+        status: 'deposit_pending',
+        notes: data[0].notes || '',
+        createdAt: data[0].created_at,
+      };
+    }
+  } catch (err) {
+    console.error('[Supabase] Erro ao criar reserva pública:', err);
+  }
+  return null;
+};
+
+// ============================================================
+// NOTIFICATIONS SYSTEM
+// ============================================================
+export const createNotification = async (storeUserId, { type, title, message, metadata }) => {
+  if (!isSupabaseConfigured || !supabase || !storeUserId) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert([{
+        user_id: storeUserId,
+        type: type || 'new_reservation',
+        title,
+        message: message || '',
+        is_read: false,
+        metadata: metadata || {},
+      }])
+      .select();
+
+    if (error) {
+      console.error('[Supabase] Erro ao criar notificação:', error);
+      return null;
+    }
+    return data?.[0] || null;
+  } catch (err) {
+    console.error('[Supabase] Erro ao criar notificação:', err);
+    return null;
+  }
+};
+
+export const fetchNotifications = async (userId) => {
+  if (!isSupabaseConfigured || !supabase || !userId) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) {
+      console.error('[Supabase] Erro ao buscar notificações:', error);
+      return [];
+    }
+
+    return (data || []).map(n => ({
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      isRead: n.is_read,
+      metadata: n.metadata,
+      createdAt: n.created_at,
+    }));
+  } catch (err) {
+    console.error('[Supabase] Erro ao buscar notificações:', err);
+    return [];
+  }
+};
+
+export const markNotificationRead = async (notificationId) => {
+  if (!isSupabaseConfigured || !supabase || !notificationId) return;
+
+  try {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+  } catch (err) {
+    console.error('[Supabase] Erro ao marcar notificação como lida:', err);
+  }
+};
+
+export const markAllNotificationsRead = async (userId) => {
+  if (!isSupabaseConfigured || !supabase || !userId) return;
+
+  try {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+  } catch (err) {
+    console.error('[Supabase] Erro ao marcar todas notificações como lidas:', err);
+  }
+};
+

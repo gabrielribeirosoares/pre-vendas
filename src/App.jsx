@@ -38,6 +38,9 @@ import {
   deleteSupabaseCustomer,
   saveSupabaseReservation,
   deleteSupabaseReservation,
+  fetchNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
 } from './services/supabase';
 
 export default function App() {
@@ -98,6 +101,8 @@ export default function App() {
   const [customers, setCustomers] = useState(() => loadState(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS));
   const [reservations, setReservations] = useState(() => loadState(STORAGE_KEYS.RESERVATIONS, INITIAL_RESERVATIONS));
   const [settings, setSettings] = useState(() => loadState(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS));
+  const [publicStoreUserId, setPublicStoreUserId] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   // Load public store data when visiting a store link as a visitor
   useEffect(() => {
@@ -112,6 +117,7 @@ export default function App() {
               // Apply store visual settings
               const { userId, ...storeSettings } = publicSettings;
               setSettings((prev) => ({ ...prev, ...storeSettings }));
+              if (userId) setPublicStoreUserId(userId);
 
               // Fetch the store's items, customers and reservations
               if (userId) {
@@ -138,6 +144,20 @@ export default function App() {
       setPublicStoreLoading(false);
     }
   }, [user]);
+
+  // Load notifications for logged-in store owner & set up polling
+  useEffect(() => {
+    if (user?.id && isSupabaseConfigured) {
+      const loadNotes = () => {
+        fetchNotifications(user.id).then((notes) => {
+          if (notes) setNotifications(notes);
+        });
+      };
+      loadNotes();
+      const interval = setInterval(loadNotes, 15000); // poll every 15s
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
 
   // Derive Store Slug for Multi-Store URL Routing
   const storeSlug = (settings?.storeName || 'minha-loja')
@@ -398,6 +418,20 @@ export default function App() {
     handleSaveSettings(INITIAL_SETTINGS);
   };
 
+  const handleMarkNotificationRead = (id) => {
+    markNotificationRead(id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    if (user?.id) markAllNotificationsRead(user.id);
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  };
+
+  const handlePublicReservationCreated = (newRes) => {
+    setReservations((prev) => [newRes, ...prev]);
+  };
+
   // Render Loading Spinner during auth check
   if (authLoading) {
     return (
@@ -451,6 +485,8 @@ export default function App() {
         reservations={reservations}
         customers={customers}
         settings={settings}
+        storeUserId={publicStoreUserId}
+        onReservationCreated={handlePublicReservationCreated}
         onBackToStorefront={() => setCurrentTab('storefront')}
       />
     );
@@ -481,6 +517,8 @@ export default function App() {
         reservations={reservations}
         customers={customers}
         settings={settings}
+        storeUserId={user?.id}
+        onReservationCreated={handlePublicReservationCreated}
         onBackToStorefront={() => setCurrentTab('storefront')}
         onBackToAdmin={() => setCurrentTab('dashboard')}
       />
@@ -519,6 +557,9 @@ export default function App() {
           onLogout={handleLogout}
           settings={settings}
           onToggleTheme={handleToggleTheme}
+          notifications={notifications}
+          onMarkNotificationRead={handleMarkNotificationRead}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
           onNewItem={() => {
             setItemToEdit(null);
             setIsItemModalOpen(true);

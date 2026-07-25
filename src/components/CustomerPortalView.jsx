@@ -24,10 +24,14 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ShoppingCart,
+  Tag,
+  Check,
 } from 'lucide-react';
 import { formatBRL, buildWhatsAppUrl, buildTrackingUrl } from '../utils/helpers';
-import { BRANDS, RESERVATION_STATUSES } from '../data/initialData';
+import { BRANDS, RESERVATION_STATUSES, ITEM_STATUSES } from '../data/initialData';
 import { ModalReceipt } from './ModalReceipt';
+import { savePublicReservation, createNotification } from '../services/supabase';
 
 // Status timeline order
 const STATUS_TIMELINE = [
@@ -72,8 +76,10 @@ export const CustomerPortalView = ({
   reservations = [],
   customers = [],
   settings,
+  storeUserId,
   onBackToStorefront,
   onBackToAdmin,
+  onReservationCreated,
 }) => {
   const [session, setSession] = useState(() => getCustomerSession());
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
@@ -89,6 +95,14 @@ export const CustomerPortalView = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Portal tabs & reservation form
+  const [activeTab, setActiveTab] = useState('vitrine');
+  const [reservingItemId, setReservingItemId] = useState(null);
+  const [reserveQuantity, setReserveQuantity] = useState(1);
+  const [reserveNotes, setReserveNotes] = useState('');
+  const [reserveLoading, setReserveLoading] = useState(false);
+  const [reserveSuccess, setReserveSuccess] = useState(null);
 
   // Find the linked store customer record by phone or email
   const loggedCustomer = session
@@ -220,6 +234,58 @@ export const CustomerPortalView = ({
     const msg = `Olá! Sou ${session?.name || 'cliente'} e gostaria de falar sobre meus pedidos de pré-venda.`;
     const storePhone = settings?.storePhone || '';
     window.open(buildWhatsAppUrl(storePhone, msg), '_blank');
+  };
+
+  // Available items for reservation (only open pre-orders)
+  const availableItems = items.filter((i) => i.status === 'pre_order_open');
+
+  // Handle reserve item
+  const handleReserveItem = async (item) => {
+    if (!session || !storeUserId) return;
+    setReserveLoading(true);
+
+    const totalPrice = item.retailPrice * reserveQuantity;
+    const customerMatch = loggedCustomer;
+
+    const reservationData = {
+      customerId: customerMatch?.id || null,
+      itemId: item.id,
+      quantity: reserveQuantity,
+      totalPrice,
+      notes: `Reserva via portal por ${session.name}${reserveNotes ? ` — ${reserveNotes}` : ''}`,
+    };
+
+    const saved = await savePublicReservation(reservationData, storeUserId);
+
+    if (saved) {
+      // Send notification to store owner
+      await createNotification(storeUserId, {
+        type: 'new_reservation',
+        title: `Nova reserva de ${session.name}`,
+        message: `${session.name} reservou ${reserveQuantity}x ${item.name} (${item.sku}) — Total: ${formatBRL(totalPrice)}`,
+        metadata: {
+          reservationId: saved.id,
+          customerName: session.name,
+          customerPhone: session.phone,
+          itemName: item.name,
+          itemSku: item.sku,
+          quantity: reserveQuantity,
+          totalPrice,
+        },
+      });
+
+      setReserveSuccess(item.id);
+      setReservingItemId(null);
+      setReserveQuantity(1);
+      setReserveNotes('');
+
+      // Callback to refresh data
+      if (onReservationCreated) onReservationCreated(saved);
+
+      setTimeout(() => setReserveSuccess(null), 3000);
+    }
+
+    setReserveLoading(false);
   };
 
   return (
@@ -533,6 +599,49 @@ export const CustomerPortalView = ({
                 <strong style={{ color: 'var(--text-primary)' }}>Dica:</strong> Use o mesmo número de WhatsApp cadastrado na loja para que suas reservas apareçam automaticamente.
               </div>
             </div>
+
+            {/* Create Store CTA */}
+            <div style={{
+              maxWidth: '440px',
+              width: '100%',
+              textAlign: 'center',
+              padding: '20px 24px',
+              borderRadius: 'var(--radius-md)',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.06), rgba(168, 85, 247, 0.06))',
+              border: '1px dashed var(--border-color)',
+            }}>
+              <Store size={22} color="var(--accent-purple)" style={{ marginBottom: '8px' }} />
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                Também vende miniaturas diecast?
+              </p>
+              <a
+                href="/"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  color: 'var(--accent-cyan)',
+                  textDecoration: 'none',
+                  padding: '8px 20px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.18)';
+                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.25)';
+                }}
+              >
+                <ArrowRight size={16} /> Crie sua loja gratuitamente
+              </a>
+            </div>
           </div>
         )}
 
@@ -629,7 +738,183 @@ export const CustomerPortalView = ({
               </button>
             </div>
 
-            {/* Reservations List */}
+            {/* Portal Tabs */}
+            <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
+              <button
+                onClick={() => setActiveTab('vitrine')}
+                style={{
+                  flex: 1, padding: '10px 16px', borderRadius: 'var(--radius-sm)',
+                  background: activeTab === 'vitrine' ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))' : 'transparent',
+                  color: activeTab === 'vitrine' ? '#fff' : 'var(--text-secondary)',
+                  border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <ShoppingCart size={16} /> Vitrine ({availableItems.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('reservas')}
+                style={{
+                  flex: 1, padding: '10px 16px', borderRadius: 'var(--radius-sm)',
+                  background: activeTab === 'reservas' ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-purple))' : 'transparent',
+                  color: activeTab === 'reservas' ? '#fff' : 'var(--text-secondary)',
+                  border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Package size={16} /> Minhas Reservas ({myReservations.length})
+              </button>
+            </div>
+
+            {/* ===== VITRINE TAB ===== */}
+            {activeTab === 'vitrine' && (
+              <div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShoppingCart size={18} /> Modelos Disponíveis para Reserva
+                </h3>
+
+                {availableItems.length === 0 ? (
+                  <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <ShoppingCart size={40} style={{ opacity: 0.3, marginBottom: '10px' }} />
+                    <div style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Nenhum modelo disponível no momento</div>
+                    <p style={{ fontSize: '0.82rem', marginTop: '4px' }}>Novos modelos serão adicionados em breve!</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                    {availableItems.map((item) => {
+                      const brand = BRANDS.find((b) => b.id === item.brandId);
+                      const isReserving = reservingItemId === item.id;
+                      const justReserved = reserveSuccess === item.id;
+
+                      return (
+                        <div key={item.id} className="glass-card" style={{ padding: 0, overflow: 'hidden', transition: 'all 0.3s ease', border: justReserved ? '1px solid rgba(16, 185, 129, 0.5)' : undefined }}>
+                          {/* Item Image */}
+                          {item.imageUrl && (
+                            <div style={{ height: '160px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            </div>
+                          )}
+
+                          {/* Item Info */}
+                          <div style={{ padding: '16px' }}>
+                            {brand && (
+                              <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                fontSize: '0.7rem', fontWeight: 700, color: brand.color,
+                                background: brand.badgeBg, padding: '3px 8px', borderRadius: '6px',
+                                marginBottom: '8px',
+                              }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: brand.color }} />
+                                {brand.name}
+                              </div>
+                            )}
+
+                            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: '6px' }}>
+                              {item.name}
+                            </h4>
+
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                              <span><Tag size={12} style={{ verticalAlign: 'middle' }} /> {item.sku}</span>
+                              <span>{item.scale}</span>
+                              {item.releaseQuarter && <span><Calendar size={12} style={{ verticalAlign: 'middle' }} /> {item.releaseQuarter}</span>}
+                            </div>
+
+                            {item.description && (
+                              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {item.description}
+                              </p>
+                            )}
+
+                            {/* Pricing */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '10px 12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px' }}>
+                              <div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>PREÇO</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>{formatBRL(item.retailPrice)}</div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>SINAL MÍN.</div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-purple)' }}>{formatBRL(item.minDeposit)}</div>
+                              </div>
+                            </div>
+
+                            {/* Reserve Button / Form */}
+                            {justReserved ? (
+                              <div style={{
+                                padding: '12px', borderRadius: '8px',
+                                background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                                textAlign: 'center', color: 'var(--accent-green)', fontWeight: 700, fontSize: '0.85rem',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                              }}>
+                                <CheckCircle2 size={18} /> Reserva enviada com sucesso!
+                              </div>
+                            ) : isReserving ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px' }}>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>Qtd:</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    value={reserveQuantity}
+                                    onChange={(e) => setReserveQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="input-field"
+                                    style={{ width: '60px', padding: '6px 8px', fontSize: '0.85rem', textAlign: 'center' }}
+                                  />
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>= {formatBRL(item.retailPrice * reserveQuantity)}</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  placeholder="Observação (opcional)"
+                                  value={reserveNotes}
+                                  onChange={(e) => setReserveNotes(e.target.value)}
+                                  className="input-field"
+                                  style={{ padding: '8px 12px', fontSize: '0.82rem' }}
+                                />
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button
+                                    onClick={() => { setReservingItemId(null); setReserveQuantity(1); setReserveNotes(''); }}
+                                    className="btn btn-secondary"
+                                    style={{ flex: 1, padding: '8px', fontSize: '0.8rem' }}
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button
+                                    onClick={() => handleReserveItem(item)}
+                                    disabled={reserveLoading}
+                                    className="btn btn-primary"
+                                    style={{ flex: 2, padding: '8px', fontSize: '0.8rem', gap: '6px' }}
+                                  >
+                                    {reserveLoading ? 'Enviando...' : <><Check size={16} /> Confirmar Reserva</>}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { if (session) { setReservingItemId(item.id); } else { setErrorMessage('Faça login para reservar.'); } }}
+                                className="btn btn-primary"
+                                style={{ width: '100%', padding: '10px', fontSize: '0.85rem', gap: '6px' }}
+                              >
+                                <ShoppingCart size={16} /> Reservar
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ===== RESERVAS TAB ===== */}
+            {activeTab === 'reservas' && (}
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Package size={18} /> Minhas Reservas ({myReservations.length})
