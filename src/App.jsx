@@ -123,16 +123,27 @@ export default function App() {
   const [publicStoreUserId, setPublicStoreUserId] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
+  // Calculate immutable slug for lojista's own store
+  const getSlug = (name) => {
+    if (!name) return '';
+    return String(name)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const myOwnStoreName = user?.user_metadata?.store_name || settings?.storeName || '';
+  const myOwnStoreSlug = getSlug(myOwnStoreName);
+
   // Load public store data when visiting a store link as a visitor or visiting another store
   useEffect(() => {
     const pathname = window.location.pathname;
     if (pathname.startsWith('/loja/')) {
       const slug = pathname.replace('/loja/', '').replace(/\/$/, '').trim();
-      const myStoreSlug = settings?.storeName
-        ? settings.storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-        : '';
+      const isOtherStore = slug && slug !== myOwnStoreSlug;
 
-      const isOtherStore = slug && slug !== myStoreSlug;
       if (!user || isOtherStore) {
         setPublicStoreLoading(true);
         fetchPublicStoreBySlug(slug).then(async (publicSettings) => {
@@ -145,6 +156,7 @@ export default function App() {
               if (storeData) {
                 setPublicStoreData({
                   ...storeSettings,
+                  storeName: storeSettings.storeName || publicSettings.storeName || slug,
                   items: storeData.items || [],
                   customers: storeData.customers || [],
                   reservations: storeData.reservations || [],
@@ -162,20 +174,33 @@ export default function App() {
     } else {
       setPublicStoreLoading(false);
     }
-  }, [user, settings?.storeName]);
+  }, [user?.id, window.location.pathname, myOwnStoreSlug]);
 
   // Real-time synchronization for store owner & public visitors via Supabase WebSockets & BroadcastChannel
   useEffect(() => {
-    const activeStoreUserId = user?.id || publicStoreUserId;
+    const pathname = window.location.pathname;
+    const currentSlug = pathname.startsWith('/loja/') ? pathname.replace('/loja/', '').replace(/\/$/, '').trim() : '';
+    const isOtherStore = currentSlug && currentSlug !== myOwnStoreSlug;
+    const isOwnerSync = !!user?.id && !isOtherStore;
+    const activeStoreUserId = isOwnerSync ? user.id : publicStoreUserId;
+
     if (activeStoreUserId && isSupabaseConfigured) {
       const refreshStoreData = () => {
         console.log('[Realtime Sync] Atualizando dados em tempo real para:', activeStoreUserId);
         fetchPublicStoreItems(activeStoreUserId).then((storeData) => {
           if (storeData) {
-            setPublicStoreData(storeData);
-            if (Array.isArray(storeData.items)) setItems(storeData.items);
-            if (Array.isArray(storeData.customers)) setCustomers(storeData.customers);
-            if (Array.isArray(storeData.reservations)) setReservations(storeData.reservations);
+            if (isOwnerSync) {
+              if (Array.isArray(storeData.items)) setItems(storeData.items);
+              if (Array.isArray(storeData.customers)) setCustomers(storeData.customers);
+              if (Array.isArray(storeData.reservations)) setReservations(storeData.reservations);
+            } else {
+              setPublicStoreData((prev) => ({
+                ...prev,
+                items: storeData.items || [],
+                customers: storeData.customers || [],
+                reservations: storeData.reservations || [],
+              }));
+            }
           }
         });
       };
@@ -199,7 +224,7 @@ export default function App() {
         if (unsubscribe) unsubscribe();
       };
     }
-  }, [user?.id, publicStoreUserId]);
+  }, [user?.id, publicStoreUserId, myOwnStoreSlug]);
 
   // Load notifications for logged-in store owner via Realtime WebSockets
   useEffect(() => {
@@ -619,11 +644,8 @@ export default function App() {
 
   const isVisitingPublicStore = window.location.pathname.startsWith('/loja/');
   const currentPathSlug = window.location.pathname.replace('/loja/', '').replace(/\/$/, '').trim();
-  const myStoreSlug = settings?.storeName
-    ? settings.storeName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    : '';
 
-  const isVisitingOtherStore = isVisitingPublicStore && Boolean(currentPathSlug) && currentPathSlug !== myStoreSlug;
+  const isVisitingOtherStore = isVisitingPublicStore && Boolean(currentPathSlug) && currentPathSlug !== myOwnStoreSlug;
 
   if ((!user && isVisitingPublicStore) || isVisitingOtherStore) {
     // Show loading while fetching store data from Supabase
@@ -653,7 +675,7 @@ export default function App() {
     }
 
     const handleOpenMyStoreAdmin = () => {
-      window.location.href = myStoreSlug ? `/loja/${myStoreSlug}` : '/';
+      window.location.href = myOwnStoreSlug ? `/loja/${myOwnStoreSlug}` : '/';
     };
 
     const targetItems = publicStoreData?.items || (isVisitingOtherStore ? [] : items);
